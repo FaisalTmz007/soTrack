@@ -34,6 +34,13 @@ const generateToken = async (user) => {
                     token: refreshToken,
                 },
             });
+        } else {
+            await prisma.UserToken.create({
+                data: {
+                    user_id: user.id,
+                    token: refreshToken,
+                },
+            });
         }
 
         return { accessToken, refreshToken };
