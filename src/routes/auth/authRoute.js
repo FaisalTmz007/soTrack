@@ -8,5 +8,6 @@ appRouter.post('/refreshOtp', AuthController.controllers.refreshOtp);
 appRouter.post('/refreshToken', AuthController.controllers.refreshToken);
 appRouter.put('/forgotPassword', AuthController.controllers.forgotPassword);
 appRouter.put('/resetPassword', AuthController.controllers.resetPassword);
+appRouter.delete('/logout', AuthController.controllers.logout);
 
 module.exports = appRouter;
