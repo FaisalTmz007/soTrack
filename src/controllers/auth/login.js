@@ -30,6 +30,7 @@ const login = async (req, res) => {
         // console.log(tokens)
         const otp = await generateOTP();
         const otp_expired = await otpExpired();
+        // console.log(otp)
 
         // update user otp
         await prisma.user.update({
