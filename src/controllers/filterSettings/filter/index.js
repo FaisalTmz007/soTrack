@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-class AuthController {
+class FilterController {
   constructor() {
     this.controllers = {};
     this.initControllers();
@@ -20,4 +20,4 @@ class AuthController {
   }
 }
 
-module.exports = { AuthController: new AuthController() };
+module.exports = { FilterController: new FilterController() };
