@@ -16,7 +16,6 @@ datasource db {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
-  username  String  @unique
   password  String
   otp_code  String? @unique
   otp_expired DateTime?
@@ -25,6 +24,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   UserToken UserToken[]
+  Filter    Filter[]
 }
 
 model UserToken {
@@ -35,4 +35,38 @@ model UserToken {
   updatedAt DateTime @updatedAt
   
   User      User     @relation(fields: [user_id], references: [id])
+}
+
+model Platform {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+
+  Filter    Filter[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Filter    Filter[]
+}
+
+model Filter {
+  id        Int      @id @default(autoincrement())
+  parameter String
+  is_active Boolean @default(true)
+  user_id   Int
+  platform_id Int
+  category_id Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User      User     @relation(fields: [user_id], references: [id])
+  Platform  Platform @relation(fields: [platform_id], references: [id])
+  Category  Category @relation(fields: [category_id], references: [id])
 }
