@@ -7,7 +7,7 @@ const deleteFilter = async (req, res) => {
   try {
     const filter = await prisma.Filter.delete({
       where: {
-        id,
+        id: parseInt(id),
       },
     });
 

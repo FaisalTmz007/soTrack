@@ -15,6 +15,10 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
 // protected route
 app.get("/protected", authenticate, (req, res) => {
   res.json({ message: "This is a protected route" });

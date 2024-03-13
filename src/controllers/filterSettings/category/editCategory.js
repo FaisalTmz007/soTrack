@@ -3,12 +3,13 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const editCategory = async (req, res) => {
-  const { id } = req.query;
+  const { id } = req.params;
   const { name } = req.body;
+  console.log(id, name);
   try {
     const category = await prisma.Category.update({
       where: {
-        id,
+        id: parseInt(id),
       },
       data: {
         name,

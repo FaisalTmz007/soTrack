@@ -1,17 +1,24 @@
 const { PrismaClient } = require("@prisma/client");
+const jwt = require("jsonwebtoken");
 
 const prisma = new PrismaClient();
 
 const addFilter = async (req, res) => {
-  const { parameter, user_id, platform_id, category_id } = req.body;
+  const { parameter, platform_id, category_id } = req.body;
+  const token = req.cookies.refresh_token;
+
+  const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+
+  const user_id = decoded.id;
+  console.log(user_id);
 
   try {
     const filter = await prisma.Filter.create({
       data: {
         parameter,
-        user_id,
-        platform_id,
-        category_id,
+        user_id: parseInt(user_id),
+        platform_id: parseInt(platform_id),
+        category_id: parseInt(category_id),
       },
     });
 

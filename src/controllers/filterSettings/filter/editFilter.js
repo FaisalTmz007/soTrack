@@ -5,10 +5,11 @@ const prisma = new PrismaClient();
 const editFilter = async (req, res) => {
   const { id } = req.params;
   const { parameter } = req.body;
+
   try {
     const filter = await prisma.Filter.update({
       where: {
-        id,
+        id: parseInt(id),
       },
       data: {
         parameter,

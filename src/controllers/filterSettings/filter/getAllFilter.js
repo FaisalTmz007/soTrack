@@ -8,7 +8,7 @@ const getAllFilter = async (req, res) => {
     if (platform) {
       const filters = await prisma.Filter.findMany({
         where: {
-          platform,
+          platform_id: parseInt(platform),
         },
       });
 
