@@ -2,24 +2,24 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-const editCategory = async (req, res) => {
+const editFilter = async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
-  console.log(id, name);
+  const { parameter } = req.body;
+
   try {
-    const category = await prisma.Category.update({
+    const filter = await prisma.Filter.update({
       where: {
         id: parseInt(id),
       },
       data: {
-        name,
+        parameter,
       },
     });
 
     res.json({
-      message: "Category has been updated",
+      message: "Filter has been updated",
       statusCode: 200,
-      data: category,
+      data: filter,
     });
   } catch (error) {
     res.status(400).json({
@@ -29,4 +29,4 @@ const editCategory = async (req, res) => {
   }
 };
 
-module.exports = editCategory;
+module.exports = editFilter;

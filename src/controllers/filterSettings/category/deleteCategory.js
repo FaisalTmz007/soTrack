@@ -3,11 +3,11 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const deleteCategory = async (req, res) => {
-  const { id } = req.query;
+  const { id } = req.params;
   try {
     const category = await prisma.Category.delete({
       where: {
-        id,
+        id: parseInt(id),
       },
     });
 

@@ -6,6 +6,18 @@ const register = async (req, res) => {
   const { email, password } = req.body;
   const hashedPassword = hashPassword(password);
   try {
+    const userExist = await prisma.user.findFirst({
+      where: {
+        email,
+      },
+    });
+
+    if (userExist) {
+      return res.status(400).json({
+        error: "Email already exist",
+      });
+    }
+
     const user = await prisma.user.create({
       data: {
         email,
