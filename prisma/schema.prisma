@@ -14,7 +14,7 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String      @id @default(uuid())
   email     String   @unique
   password  String
   otp_code  String? @unique
@@ -28,8 +28,8 @@ model User {
 }
 
 model UserToken {
-  id        Int      @id @default(autoincrement())
-  user_id   Int
+  id        String      @id @default(uuid())
+  user_id   String
   token     String  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -38,7 +38,7 @@ model UserToken {
 }
 
 model Platform {
-  id        Int      @id @default(autoincrement())
+  id        String      @id @default(uuid())
   name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -48,7 +48,7 @@ model Platform {
 }
 
 model Category {
-  id        Int      @id @default(autoincrement())
+  id        String      @id @default(uuid())
   name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -57,12 +57,12 @@ model Category {
 }
 
 model Filter {
-  id        Int      @id @default(autoincrement())
+  id        String      @id @default(uuid())
   parameter String
   is_active Boolean @default(true)
-  user_id   Int
-  platform_id Int
-  category_id Int
+  user_id   String
+  platform_id String
+  category_id String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

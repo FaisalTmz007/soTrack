@@ -8,19 +8,12 @@ const verifyOtp = async (req, res) => {
   const otpHeader = req.headers["authorization"];
   const { otp_code } = req.body;
 
-  const token = otpHeader && otpHeader.split(" ")[1];
-  if (token == null) return res.sendStatus(401);
-  console.log("ini token: " + token);
-
-  const token_decoded = jwt.verify(token, process.env.GENERATE_OTP_SECRET);
-
-  //   const otp_code = req.body.otp_code;
-  // console.log(otp_code)
-  //   if (!otp_code) {
-  //     return res.status(400).json({ error: "OTP is required" });
-  //   }
-
   try {
+    const otpToken = otpHeader && otpHeader.split(" ")[1];
+    if (otpToken == null) return res.sendStatus(401);
+    // console.log("ini token: " + token);
+
+    const token_decoded = jwt.verify(otpToken, process.env.GENERATE_OTP_SECRET);
     const user = await prisma.user.findFirst({
       where: {
         id: token_decoded.id,

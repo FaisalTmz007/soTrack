@@ -2,19 +2,19 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-const deleteCategory = async (req, res) => {
+const deletePlatform = async (req, res) => {
   const { id } = req.params;
   try {
-    const category = await prisma.Category.delete({
+    const platform = await prisma.Platform.delete({
       where: {
         id,
       },
     });
 
     res.json({
-      message: "Category has been deleted",
+      message: "Platform has been deleted",
       statusCode: 200,
-      data: category,
+      data: platform,
     });
   } catch (error) {
     res.status(400).json({
@@ -24,4 +24,4 @@ const deleteCategory = async (req, res) => {
   }
 };
 
-module.exports = deleteCategory;
+module.exports = deletePlatform;

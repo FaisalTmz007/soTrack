@@ -1,40 +1,40 @@
 const { PrismaClient } = require("@prisma/client");
 const capitalize = require("../../../utils/capitalize");
+
 const prisma = new PrismaClient();
 
-const editCategory = async (req, res) => {
+const editPlatform = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
-
-  const categoryName = capitalize(name);
-
   try {
-    const category = await prisma.Category.findUnique({
+    const platformName = capitalize(name);
+
+    const platform = await prisma.Platform.findUnique({
       where: {
-        name: categoryName,
+        name: platformName,
       },
     });
 
-    if (category) {
+    if (platform) {
       return res.status(400).json({
-        error: "Category already exists",
-        message: "Category already exists",
+        error: "Platform already exists",
+        message: "Platform already exists",
       });
     }
 
-    const categoryUpdate = await prisma.Category.update({
+    const platformUpdate = await prisma.Platform.update({
       where: {
         id,
       },
       data: {
-        name: categoryName,
+        name: platformName,
       },
     });
 
     res.json({
-      message: "Category has been updated",
+      message: "Platform has been updated",
       statusCode: 200,
-      data: categoryUpdate,
+      data: platformUpdate,
     });
   } catch (error) {
     res.status(400).json({
@@ -44,4 +44,4 @@ const editCategory = async (req, res) => {
   }
 };
 
-module.exports = editCategory;
+module.exports = editPlatform;

@@ -16,6 +16,12 @@ appRouter.get(
   FilterController.controllers.getAllFilter
 );
 
+appRouter.get(
+  "/filter-user",
+  [authenticate],
+  FilterController.controllers.getUserFilter
+);
+
 appRouter.put(
   "/filter/:id",
   [authenticate],
