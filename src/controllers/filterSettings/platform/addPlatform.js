@@ -4,13 +4,14 @@ const capitalize = require("../../../utils/capitalize");
 const prisma = new PrismaClient();
 
 const addPlatform = async (req, res) => {
-  const { name } = req.body;
+  const { name, logo_url } = req.body;
 
   try {
     const platformName = capitalize(name);
     const platform = await prisma.Platform.findUnique({
       where: {
         name: platformName,
+        logo_url,
       },
     });
 

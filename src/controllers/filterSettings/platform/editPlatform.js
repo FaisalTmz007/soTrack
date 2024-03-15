@@ -5,22 +5,9 @@ const prisma = new PrismaClient();
 
 const editPlatform = async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { name, logo_url } = req.body;
   try {
     const platformName = capitalize(name);
-
-    const platform = await prisma.Platform.findUnique({
-      where: {
-        name: platformName,
-      },
-    });
-
-    if (platform) {
-      return res.status(400).json({
-        error: "Platform already exists",
-        message: "Platform already exists",
-      });
-    }
 
     const platformUpdate = await prisma.Platform.update({
       where: {
@@ -28,6 +15,7 @@ const editPlatform = async (req, res) => {
       },
       data: {
         name: platformName,
+        logo_url,
       },
     });
 

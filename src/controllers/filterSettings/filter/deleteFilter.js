@@ -4,17 +4,21 @@ const prisma = new PrismaClient();
 
 const deleteFilter = async (req, res) => {
   const { id } = req.params;
-  const refresh_token = req.cookies.refresh_token;
+  const access_token = req.headers["authorization"];
 
   try {
-    const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
-    console.log(decoded);
+    const token = access_token && access_token.split(" ")[1];
+    if (token == null) return res.sendStatus(401);
+    // console.log("ini token: " + token);
+
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
     const filter = await prisma.Filter.findFirst({
       where: {
-        id,
+        user_id: decoded.id,
       },
     });
+    // console.log(filter);
 
     if (filter.user_id !== decoded.id) {
       return res.status(403).json({ error: "Access denied" });

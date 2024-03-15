@@ -6,28 +6,13 @@ const editCategory = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
 
-  const categoryName = capitalize(name);
-
   try {
-    const category = await prisma.Category.findUnique({
-      where: {
-        name: categoryName,
-      },
-    });
-
-    if (category) {
-      return res.status(400).json({
-        error: "Category already exists",
-        message: "Category already exists",
-      });
-    }
-
     const categoryUpdate = await prisma.Category.update({
       where: {
         id,
       },
       data: {
-        name: categoryName,
+        name: capitalize(name),
       },
     });
 

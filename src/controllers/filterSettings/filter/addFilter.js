@@ -6,10 +6,13 @@ const prisma = new PrismaClient();
 
 const addFilter = async (req, res) => {
   const { parameter, platform_id, category_id } = req.body;
-  const token = req.cookies.refresh_token;
+  const access_token = req.headers["authorization"];
 
   try {
-    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+    const token = access_token && access_token.split(" ")[1];
+    if (token == null) return res.sendStatus(401);
+
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const user_id = decoded.id;
     // console.log(user_id);
 

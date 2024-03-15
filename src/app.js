@@ -7,12 +7,16 @@ const authRoute = require("./routes/auth/authRoute");
 const categoryRoute = require("./routes/filterSettings/category/categoryRoute");
 const filterRoute = require("./routes/filterSettings/filter/filterRoute");
 const platformRoute = require("./routes/filterSettings/platform/platformRoute");
-const authenticate = require("./middlewares/auth/authenticate");
 const app = express();
+
+const corsOptions = {
+  origin: true,
+  credentials: true,
+};
 
 // middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));

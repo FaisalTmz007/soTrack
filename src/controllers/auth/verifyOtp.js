@@ -46,17 +46,19 @@ const verifyOtp = async (req, res) => {
     });
 
     res
-      .cookie("refresh_token", token.refreshToken, { httpOnly: true })
-      .header("Authorization", `Bearer ${token.accessToken}`);
-    res.json({
-      message: "OTP has been verified",
-      statusCode: 200,
-      data: {
-        id: user.id,
-        email: user.email,
-        accessToken: token.accessToken,
-      },
-    });
+      .header("Authorization", `Bearer ${token.accessToken}`)
+      .cookie("refresh_token", token.refreshToken, {
+        httpOnly: true,
+      })
+      .json({
+        message: "OTP has been verified",
+        statusCode: 200,
+        data: {
+          id: user.id,
+          email: user.email,
+          accessToken: token.accessToken,
+        },
+      });
   } catch (error) {
     res.status(400).json({
       error: "An error has occured",
