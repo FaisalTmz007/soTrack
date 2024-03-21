@@ -23,7 +23,7 @@ const editFilter = async (req, res) => {
     if (filter.user_id !== decoded.id) {
       return res.status(403).json({ error: "Access denied" });
     }
-    // console.log(typeof is_active);
+
     const filterUpdate = await prisma.Filter.update({
       where: {
         id,

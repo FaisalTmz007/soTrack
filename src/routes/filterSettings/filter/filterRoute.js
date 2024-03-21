@@ -5,7 +5,7 @@ const {
 } = require("../../../controllers/filterSettings/filter/index");
 
 appRouter.post(
-  "/filter",
+  "/filter-user",
   [authenticate],
   FilterController.controllers.addFilter
 );
@@ -23,13 +23,13 @@ appRouter.get(
 );
 
 appRouter.put(
-  "/filter/:id",
+  "/filter-user/:id",
   [authenticate],
   FilterController.controllers.editFilter
 );
 
 appRouter.delete(
-  "/filter/:id",
+  "/filter-user/:id",
   [authenticate],
   FilterController.controllers.deleteFilter
 );

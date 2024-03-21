@@ -7,6 +7,7 @@ const authRoute = require("./routes/auth/authRoute");
 const categoryRoute = require("./routes/filterSettings/category/categoryRoute");
 const filterRoute = require("./routes/filterSettings/filter/filterRoute");
 const platformRoute = require("./routes/filterSettings/platform/platformRoute");
+// const modelPredict = require("./utils/modelPredict");
 const app = express();
 
 const corsOptions = {
@@ -25,6 +26,13 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
+
+// model predict route
+// app.post("/predict", async (req, res) => {
+//   const { data } = req.body;
+//   const prediction = await modelPredict(data);
+//   res.json(prediction);
+// });
 
 // auth route
 app.use(authRoute);

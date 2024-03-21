@@ -49,6 +49,8 @@ const verifyOtp = async (req, res) => {
       .header("Authorization", `Bearer ${token.accessToken}`)
       .cookie("refresh_token", token.refreshToken, {
         httpOnly: true,
+        sameSite: "none",
+        secure: true,
       })
       .json({
         message: "OTP has been verified",

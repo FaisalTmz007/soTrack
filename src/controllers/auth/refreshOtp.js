@@ -36,7 +36,7 @@ const refreshOtp = async (req, res) => {
       },
     });
 
-    await sendOTPEmail(user.email, newOtp);
+    await sendOTPEmail(user.email, otp);
 
     res.json({
       message: "OTP has been refreshed",

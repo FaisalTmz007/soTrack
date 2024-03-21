@@ -18,6 +18,18 @@ const addFilter = async (req, res) => {
 
     const parameterName = capitalize(parameter);
 
+    const filterExist = await prisma.Filter.findFirst({
+      where: {
+        parameter: parameterName,
+        user_id,
+        platform_id,
+      },
+    });
+
+    if (filterExist) {
+      return res.status(400).json({ error: "Filter already exist" });
+    }
+
     const filter = await prisma.Filter.create({
       data: {
         parameter: parameterName,
