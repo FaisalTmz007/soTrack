@@ -35,7 +35,7 @@ app.use(authRoute);
 app.use(categoryRoute);
 app.use(filterRoute);
 app.use(platformRoute);
-app.get("/news", getNews);
+// app.get("/news", getNews);
 
 // Automate get news in 24 hours to /news
 // function makePeriodicRequest() {
