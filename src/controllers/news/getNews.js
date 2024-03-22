@@ -46,6 +46,9 @@ const getNews = async (req, res) => {
 
       //   console.log(data);
 
+      // order data by date
+      data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
       // store to db
       data.forEach(async (news) => {
         const newsExist = await prisma.Post.findUnique({
@@ -67,9 +70,6 @@ const getNews = async (req, res) => {
           //   console.log("News has been stored");
         }
       });
-
-      // order data by date
-      data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
       res.json({
         message: "News has been fetched",

@@ -7,7 +7,7 @@ const authRoute = require("./routes/auth/authRoute");
 const categoryRoute = require("./routes/filterSettings/category/categoryRoute");
 const filterRoute = require("./routes/filterSettings/filter/filterRoute");
 const platformRoute = require("./routes/filterSettings/platform/platformRoute");
-const getNews = require("./controllers/news/getNews");
+// const getNews = require("./controllers/news/getNews");
 const axios = require("axios");
 const app = express();
 
@@ -35,7 +35,7 @@ app.use(authRoute);
 app.use(categoryRoute);
 app.use(filterRoute);
 app.use(platformRoute);
-// app.get("/news", getNews);
+app.get("/news", getNews);
 
 // Automate get news in 24 hours to /news
 // function makePeriodicRequest() {
