@@ -46,6 +46,7 @@ model Platform {
 
 
   Filter    Filter[]
+  Post      Post[]
 }
 
 model Category {
@@ -70,4 +71,21 @@ model Filter {
   User      User     @relation(fields: [user_id], references: [id])
   Platform  Platform @relation(fields: [platform_id], references: [id])
   Category  Category @relation(fields: [category_id], references: [id])
+}
+
+model Post {
+  id        String      @id @default(uuid())
+  author   String?
+  caption     String?
+  published_at DateTime?
+  crime_type    String?
+  likes    Int?
+  comments Int?
+  post_url  String? @db.Text
+  media_url  String? @db.Text
+  platform_id String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Platform  Platform @relation(fields: [platform_id], references: [id])
 }
