@@ -7,13 +7,8 @@ const authRoute = require("./routes/auth/authRoute");
 const categoryRoute = require("./routes/filterSettings/category/categoryRoute");
 const filterRoute = require("./routes/filterSettings/filter/filterRoute");
 const platformRoute = require("./routes/filterSettings/platform/platformRoute");
-<<<<<<< HEAD
 const dashboardRoute = require("./routes/dashboard/dashboardRoute");
 const makePeriodicRequest = require("./utils/news-scraping/getAllNews");
-=======
-// const getNews = require("./controllers/news/getNews");
-const axios = require("axios");
->>>>>>> 1325a03ae85a15bb36187a64f30db0ae173482a6
 const app = express();
 
 const corsOptions = {
