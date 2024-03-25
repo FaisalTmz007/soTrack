@@ -1,11 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
-const { getISOWeek } = require("date-fns");
-
 const prisma = new PrismaClient();
 
 const criminalReport = async (req, res) => {
   try {
-    const { range } = req.query;
     // count data from post table group by published_at in every 1 month
     const data = await prisma.post.findMany({
       select: {
@@ -14,73 +11,24 @@ const criminalReport = async (req, res) => {
       },
     });
 
-    if (range === "monthly") {
-      // Transform the dates to the desired format and count posts for each month
-      const countsByMonth = data.reduce((acc, post) => {
-        const date = new Date(post.published_at);
-        const monthYearKey = `${date.getMonth() + 1}-${date.getFullYear()}`;
-        acc[monthYearKey] = (acc[monthYearKey] || 0) + 1;
-        return acc;
-      }, {});
+    const countsByYear = data.reduce((acc, post) => {
+      const date = new Date(post.published_at);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      let weekNumber = getWeekNumber(date);
+      // if (weekNumber > 4) weekNumber = 1;
+      if (!acc[year]) acc[year] = {};
+      if (!acc[year][month]) acc[year][month] = {};
+      if (!acc[year][month][weekNumber]) acc[year][month][weekNumber] = 0;
+      acc[year][month][weekNumber]++;
+      return acc;
+    }, {});
 
-      // Convert the counts to the desired format
-      const formattedCounts = Object.entries(countsByMonth).map(
-        ([month, count]) => ({
-          month,
-          count,
-        })
-      );
-
-      res.json({
-        message: "Data has been fetched",
-        statusCode: 200,
-        data: formattedCounts,
-      });
-    } else if (range === "weekly") {
-      // Transform the dates to the desired format and count posts for each week
-      const countsByWeek = data.reduce((acc, post) => {
-        const date = new Date(post.published_at);
-        const weekYearKey = `${getISOWeek(date)}-${date.getFullYear()}`;
-        acc[weekYearKey] = (acc[weekYearKey] || 0) + 1;
-        return acc;
-      }, {});
-
-      // Convert the counts to the desired format
-      const formattedCounts = Object.entries(countsByWeek).map(
-        ([week, count]) => ({
-          week,
-          count,
-        })
-      );
-
-      res.json({
-        message: "Data has been fetched",
-        statusCode: 200,
-        data: formattedCounts,
-      });
-    } else if (range === "yearly") {
-      // Transform the dates to the desired format and count posts for each year
-      const countsByYear = data.reduce((acc, post) => {
-        const date = new Date(post.published_at);
-        const year = date.getFullYear();
-        acc[year] = (acc[year] || 0) + 1;
-        return acc;
-      }, {});
-
-      // Convert the counts to the desired format
-      const formattedCounts = Object.entries(countsByYear).map(
-        ([year, count]) => ({
-          year,
-          count,
-        })
-      );
-
-      res.json({
-        message: "Data has been fetched",
-        statusCode: 200,
-        data: formattedCounts,
-      });
-    }
+    res.json({
+      message: "Data has been fetched",
+      statusCode: 200,
+      data: countsByYear,
+    });
   } catch (error) {
     res.status(400).json({
       error: "An error has occurred",
@@ -88,5 +36,14 @@ const criminalReport = async (req, res) => {
     });
   }
 };
+
+// Function to get the week number of a given date
+function getWeekNumber(date) {
+  const oneJan = new Date(date.getFullYear(), 0, 1);
+  const millisecondsInDay = 86400000;
+  return Math.ceil(
+    ((date - oneJan) / millisecondsInDay + oneJan.getDay() + 1) / 7
+  );
+}
 
 module.exports = criminalReport;

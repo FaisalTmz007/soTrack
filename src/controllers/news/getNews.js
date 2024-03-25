@@ -49,6 +49,14 @@ const getNews = async (req, res) => {
       // order data by date
       data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+      const newsPlatform = await prisma.Platform.findUnique({
+        where: {
+          name: "News",
+        },
+      });
+
+      const newsId = newsPlatform.id;
+
       // store to db
       data.forEach(async (news) => {
         const newsExist = await prisma.Post.findUnique({
@@ -64,10 +72,9 @@ const getNews = async (req, res) => {
               media_url: news.imgSrc,
               published_at: new Date(news.date),
               post_url: news.link,
-              platform_id: "fc595eb6-342b-4ee5-b277-d44fdc9cf74d",
+              platform_id: newsId,
             },
           });
-          //   console.log("News has been stored");
         }
       });
 

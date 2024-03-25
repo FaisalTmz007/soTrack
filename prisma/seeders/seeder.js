@@ -1,59 +1,34 @@
 const { PrismaClient } = require("@prisma/client");
-const hashPassword = require("../utils/hashPassword");
 
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.user.createMany({
-    data: [
-      {
-        email: "example01@gmail.com",
-        password: hashPassword("example01"),
-      },
-      {
-        email: "example02@gmail.com",
-        password: hashPassword("example02"),
-      },
-    ],
-  });
-
-  // add multiple platform
-  await prisma.platform.createMany({
+  await prisma.Platform.createMany({
     data: [
       {
         name: "Facebook",
+        logo_url:
+          "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg",
       },
       {
         name: "Instagram",
+        logo_url:
+          "https://upload.wikimedia.org/wikipedia/commons/9/95/Instagram_logo_2022.svg",
       },
       {
-        name: "Twitter",
-      },
-    ],
-  });
-
-  await prisma.category.createMany({
-    data: [
-      {
-        name: "Keyword",
-      },
-      {
-        name: "Mention",
-      },
-      {
-        name: "Topic",
+        name: "News",
+        logo_url:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLe95jtEksMDjOer0AVQGEbcmsoK7XrvH3-nTweh9E&s",
       },
     ],
   });
 }
 
 main()
-  .then(async () => {
-    console.log("Seed has been added");
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
+  .catch((e) => {
     console.error(e);
-    await prisma.$disconnect();
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
