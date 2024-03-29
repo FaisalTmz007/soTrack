@@ -7,5 +7,10 @@ appRouter.get(
   [authenticate],
   DashboardController.controllers.criminalReport
 );
+appRouter.get(
+  "/criminalType",
+  [authenticate],
+  DashboardController.controllers.criminalType
+);
 
 module.exports = appRouter;

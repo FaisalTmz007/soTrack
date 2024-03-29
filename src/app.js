@@ -45,12 +45,14 @@ app.use(function (req, res, next) {
   next(createHttpError(404));
 });
 
-// Automate get news in 1 hours to /news
+// Automate get news in 24 hours to /news
 function makePeriodicRequest() {
   setInterval(async () => {
     try {
       // Make the request to the endpoint
-      const response = await axios.get("http://localhost:3000/news");
+      const response = await axios.get(
+        `http://localhost:${process.env.PORT}/news`
+      );
       console.log("Periodic request made successfully");
     } catch (error) {
       console.error("Error making periodic request:", error.message);
