@@ -39,8 +39,6 @@ async function getData(page) {
     url = base_url + "page/" + page;
   }
 
-  console.log(url);
-
   try {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);

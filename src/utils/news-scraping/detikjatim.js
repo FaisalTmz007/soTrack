@@ -37,7 +37,6 @@ async function getData(page) {
   if (page) {
     url = base_url + "/" + page;
   }
-  console.log(url);
   let result = [];
   try {
     const response = await axios.get(url);
