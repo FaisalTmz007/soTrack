@@ -81,8 +81,11 @@ app.use(platformRoute);
 app.use(dashboardRoute);
 
 // catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  next(createHttpError(404));
+app.use(function (req, res) {
+  res.status(404).json({
+    message: `Cannot ${req.method} ${req.url}`,
+    statusCode: 404,
+  });
 });
 
 // Automate get news in 24 hours to /news
