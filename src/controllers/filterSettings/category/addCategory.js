@@ -23,7 +23,7 @@ const addCategory = async (req, res) => {
 
     const categoryCreate = await prisma.Category.create({
       data: {
-        name,
+        name: categoryName,
       },
     });
 

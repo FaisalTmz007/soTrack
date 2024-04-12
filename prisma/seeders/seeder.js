@@ -21,7 +21,20 @@ async function main() {
           "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLe95jtEksMDjOer0AVQGEbcmsoK7XrvH3-nTweh9E&s",
       },
     ],
-  });
+  }),
+    await prisma.Category.createMany({
+      data: [
+        {
+          name: "Keyword",
+        },
+        {
+          name: "Mention",
+        },
+        {
+          name: "Hashtag",
+        },
+      ],
+    });
 }
 
 main()

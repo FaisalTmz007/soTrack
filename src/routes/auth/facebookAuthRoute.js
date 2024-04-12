@@ -1,33 +1,24 @@
 const { appRouter } = require("../index");
 const passport = require("passport");
 const isLoggedIn = require("../../middlewares/auth/facebookAuth");
+const {
+  FacebookAuthController,
+} = require("../../controllers/auth/facebook/index");
 
+// Route untuk autentikasi Facebook
 appRouter.get("/auth/facebook", passport.authenticate("facebook"));
 
+// Route callback untuk autentikasi Facebook
 appRouter.get(
   "/auth/facebook/callback",
   passport.authenticate("facebook", { failureRedirect: "/auth/failed" }),
-  function (req, res) {
-    // Successful authentication, redirect home.
-    res.redirect("/profile");
-  }
+  FacebookAuthController.controllers.facebookCallback
 );
 
-appRouter.get("/auth/failed", function (req, res) {
-  res.send("Failed attempt");
-});
-
-appRouter.get("/profile", isLoggedIn, function (req, res) {
-  // Send user data and access token to the profile page
-  res.json({
-    message: "Logged in successfully",
-    statusCode: 200,
-    data: {
-      user: req.user,
-      faebook_user_id: req.user.id,
-      access_token: req.user.accessToken,
-    },
-  });
-});
+// Route untuk menangani kegagalan autentikasi
+appRouter.get(
+  "/auth/failed",
+  FacebookAuthController.controllers.facebookAuthFailed
+);
 
 module.exports = appRouter;

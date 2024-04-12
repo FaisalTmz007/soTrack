@@ -1,18 +1,19 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const createHttpError = require("http-errors");
 const morgan = require("morgan");
 const axios = require("axios");
 const session = require("express-session");
 const passport = require("passport");
 const FacebookStrategy = require("passport-facebook").Strategy;
 const authRoute = require("./routes/auth/authRoute");
-const fbAuthRoute = require("./routes/auth/facebookAuthRoute");
+const facebookAuthRoute = require("./routes/auth/facebookAuthRoute");
 const categoryRoute = require("./routes/filterSettings/category/categoryRoute");
 const filterRoute = require("./routes/filterSettings/filter/filterRoute");
 const platformRoute = require("./routes/filterSettings/platform/platformRoute");
 const dashboardRoute = require("./routes/dashboard/dashboardRoute");
+const facebookRoute = require("./routes/posts/facebook/facebookRoute");
+const instagramRoute = require("./routes/posts/instagram/instagramRoute");
 const getNews = require("./controllers/news/getNews");
 const app = express();
 
@@ -22,6 +23,15 @@ const corsOptions = {
 };
 
 // middlewares
+app.use(
+  session({
+    resave: false,
+    saveUninitialized: true,
+    secret: "SECRET",
+    cookie: { maxAge: 2 * 30 * 24 * 60 * 60 * 1000 }, // 2 months
+  })
+);
+
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use(morgan("dev"));
@@ -34,6 +44,7 @@ app.use(
     resave: false,
     saveUninitialized: true,
     secret: "SECRET",
+    cookie: { maxAge: 2 * 30 * 24 * 60 * 60 * 1000 }, // 2 months
   })
 );
 
@@ -48,20 +59,37 @@ passport.deserializeUser(function (obj, cb) {
   cb(null, obj);
 });
 
-passport.use(
-  new FacebookStrategy(
-    {
-      clientID: process.env.FACEBOOK_APP_ID,
-      clientSecret: process.env.FACEBOOK_APP_SECRET,
-      callbackURL: process.env.FACEBOOK_CALLBACK_URL,
-    },
-    function (accessToken, refreshToken, profile, done) {
-      console.log("🚀 ~ accessToken:", accessToken);
-      profile.accessToken = accessToken;
-      return done(null, profile);
-    }
-  )
-);
+if (process.env.NODE_ENV === "production") {
+  passport.use(
+    new FacebookStrategy(
+      {
+        clientID: process.env.FACEBOOK_APP_ID,
+        clientSecret: process.env.FACEBOOK_APP_SECRET,
+        callbackURL: process.env.FACEBOOK_CALLBACK_URL_PROD,
+      },
+      function (accessToken, refreshToken, profile, done) {
+        console.log("🚀 ~ accessToken:", accessToken);
+        profile.accessToken = accessToken;
+        return done(null, profile);
+      }
+    )
+  );
+} else {
+  passport.use(
+    new FacebookStrategy(
+      {
+        clientID: process.env.FACEBOOK_APP_ID,
+        clientSecret: process.env.FACEBOOK_APP_SECRET,
+        callbackURL: process.env.FACEBOOK_CALLBACK_URL_DEV,
+      },
+      function (accessToken, refreshToken, profile, done) {
+        console.log("🚀 ~ accessToken:", accessToken);
+        profile.accessToken = accessToken;
+        return done(null, profile);
+      }
+    )
+  );
+}
 
 // default route
 app.get("/", (req, res) => {
@@ -72,13 +100,17 @@ app.get("/news", getNews);
 
 // auth route
 app.use(authRoute);
-app.use(fbAuthRoute);
+app.use(facebookAuthRoute);
 
 // filter settings
 app.use(categoryRoute);
 app.use(filterRoute);
 app.use(platformRoute);
 app.use(dashboardRoute);
+
+// sosmed route
+app.use(facebookRoute);
+app.use(instagramRoute);
 
 // catch 404 and forward to error handler
 app.use(function (req, res) {

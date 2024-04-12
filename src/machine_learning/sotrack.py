@@ -1,15 +1,67 @@
 from flask import Flask, request, jsonify
 import os
+import re
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import nltk
+nltk.download('punkt')
+nltk.download('wordnet')
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer, WordNetLemmatizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from dotenv import load_dotenv
 
 app = Flask(__name__)
+
+# Lower casing, removing punctuation, and whitespace
+def preprocess_text(text):
+    emoji_pattern = re.compile("["
+          u"\U0001F600-\U0001F64F"  # emoticons
+          u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+          u"\U0001F680-\U0001F6FF"  # transport & map symbols
+          u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                            "]+", flags=re.UNICODE)
+    
+    # Remove emojis
+    text = emoji_pattern.sub(r'', text)
+    
+    # Remove URLs
+    text = re.sub(r'https?://\S+|www\.\S+', '', text)
+    
+    # Strip leading and trailing whitespace
+    text = text.strip()
+    
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Remove punctuations
+    punctuations = '''!()-[]{};:'"\,<>./?@#$%^&*_~'''
+    for x in text:
+        if x in punctuations:
+            text = text.replace(x, "")
+    
+    # Remove stopwords
+    stop_words = set(stopwords.words('english'))
+    tokens = word_tokenize(text)
+    filtered_tokens = [word for word in tokens if word not in stop_words]
+    
+    # Stemming
+    stemmer = PorterStemmer()
+    stemmed_tokens = [stemmer.stem(word) for word in filtered_tokens]
+    
+    # Lemmatization
+    lemmatizer = WordNetLemmatizer()
+    lemmatized_tokens = [lemmatizer.lemmatize(word) for word in stemmed_tokens]
+
+    # Join tokens back into a single string
+    text = " ".join(lemmatized_tokens)
+
+    return text
 
 data = pd.read_csv('type_of_crime_data.csv')
 
@@ -33,9 +85,10 @@ model.fit(xtrain, ytrain)
 def predict():
     data = request.get_json()
     headline = data['headline']
+    headline = preprocess_text(headline)
     text = m.transform([headline]).toarray()
     prediction = model.predict(text)[0]
-    return jsonify({'prediction': prediction})
+    return jsonify({'prediction': prediction, 'headline': headline})
 
 # Error analysis
 @app.route('/error-analysis')

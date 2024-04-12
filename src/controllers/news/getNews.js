@@ -35,7 +35,14 @@ const getNews = async (req, res) => {
         },
       });
 
+      const newsCategory = await prisma.Category.findUnique({
+        where: {
+          name: "Keyword",
+        },
+      });
+
       const newsId = newsPlatform.id;
+      const categoryId = newsCategory.id;
 
       // store to db
       data.forEach(async (news) => {
@@ -64,6 +71,7 @@ const getNews = async (req, res) => {
               crime_type: predict.data.prediction,
               post_url: news.link,
               platform_id: newsId,
+              categoryId: categoryId,
             },
           });
           return;
@@ -100,7 +108,14 @@ const getNews = async (req, res) => {
         },
       });
 
+      const newsCategory = await prisma.Category.findUnique({
+        where: {
+          name: "Keyword",
+        },
+      });
+
       const newsId = newsPlatform.id;
+      const categoryId = newsCategory.id;
 
       // store to db
       data.forEach(async (news) => {
@@ -129,6 +144,7 @@ const getNews = async (req, res) => {
               crime_type: predict.data.prediction,
               post_url: news.link,
               platform_id: newsId,
+              category_id: categoryId,
             },
           });
           return;
