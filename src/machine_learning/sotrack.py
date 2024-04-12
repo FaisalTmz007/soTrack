@@ -81,7 +81,11 @@ xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size=0.20)
 model = MultinomialNB()
 model.fit(xtrain, ytrain)
 
-@app.route('/predict', methods=['POST'])
+@app.route('/ml')
+def index():
+    return jsonify({'message': 'Welcome to the machine learning API!'})
+
+@app.route('/ml/predict', methods=['POST'])
 def predict():
     data = request.get_json()
     headline = data['headline']
@@ -91,7 +95,7 @@ def predict():
     return jsonify({'prediction': prediction, 'headline': headline})
 
 # Error analysis
-@app.route('/error-analysis')
+@app.route('/ml/error-analysis')
 def error_analysis():
     misclassified_examples = []
 
