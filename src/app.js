@@ -14,7 +14,7 @@ const platformRoute = require("./routes/filterSettings/platform/platformRoute");
 const dashboardRoute = require("./routes/dashboard/dashboardRoute");
 const facebookRoute = require("./routes/posts/facebook/facebookRoute");
 const instagramRoute = require("./routes/posts/instagram/instagramRoute");
-const getNews = require("./controllers/news/getNews");
+const getNews = require("./controllers/posts/news/getNews");
 const app = express();
 
 const corsOptions = {

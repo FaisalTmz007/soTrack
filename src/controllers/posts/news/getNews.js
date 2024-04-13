@@ -2,10 +2,10 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const translate = require("translate-google");
 const axios = require("axios");
-const beritajatim = require("../../utils/news-scraping/beritajatim");
-const detikjatim = require("../../utils/news-scraping/detikjatim");
-const jpnnjatim = require("../../utils/news-scraping/jpnnjatim");
-const zonajatim = require("../../utils/news-scraping/zonajatim");
+const beritajatim = require("../../../utils/news-scraping/beritajatim");
+const detikjatim = require("../../../utils/news-scraping/detikjatim");
+const jpnnjatim = require("../../../utils/news-scraping/jpnnjatim");
+const zonajatim = require("../../../utils/news-scraping/zonajatim");
 
 const getNews = async (req, res) => {
   try {
@@ -46,9 +46,9 @@ const getNews = async (req, res) => {
 
       // store to db
       data.forEach(async (news) => {
-        const newsExist = await prisma.Post.findUnique({
+        const newsExist = await prisma.News.findUnique({
           where: {
-            caption: news.title,
+            title: news.title,
           },
         });
 
@@ -63,15 +63,15 @@ const getNews = async (req, res) => {
             headline: translatedcaption,
           });
           // console.log(predict.data);
-          await prisma.Post.create({
+          await prisma.News.create({
             data: {
-              caption: news.title,
-              media_url: news.imgSrc,
+              title: news.title,
+              source: news.source,
+              url: news.link,
               published_at: new Date(news.date),
               crime_type: predict.data.prediction,
-              post_url: news.link,
               platform_id: newsId,
-              categoryId: categoryId,
+              category_id: categoryId,
             },
           });
           return;
@@ -97,7 +97,7 @@ const getNews = async (req, res) => {
         ...zonajatimData,
       ];
 
-      //   console.log(data);
+      // console.log(data);
 
       // order data by date
       data.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -119,9 +119,9 @@ const getNews = async (req, res) => {
 
       // store to db
       data.forEach(async (news) => {
-        const newsExist = await prisma.Post.findUnique({
+        const newsExist = await prisma.News.findUnique({
           where: {
-            caption: news.title,
+            title: news.title,
           },
         });
 
@@ -136,13 +136,13 @@ const getNews = async (req, res) => {
             headline: translatedcaption,
           });
           // console.log(predict.data);
-          await prisma.Post.create({
+          await prisma.News.create({
             data: {
-              caption: news.title,
-              media_url: news.imgSrc,
+              title: news.title,
+              source: news.source,
+              url: news.link,
               published_at: new Date(news.date),
               crime_type: predict.data.prediction,
-              post_url: news.link,
               platform_id: newsId,
               category_id: categoryId,
             },

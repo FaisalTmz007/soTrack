@@ -20,11 +20,13 @@ model User {
   otp_code  String? @unique
   otp_expired DateTime?
   reset_password String? @db.Text
+  facebook_id String? @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   UserToken UserToken[]
   Filter    Filter[]
+  SocialMedia      SocialMedia[]
 }
 
 model UserToken {
@@ -46,7 +48,8 @@ model Platform {
 
 
   Filter    Filter[]
-  Post      Post[]
+  SocialMedia      SocialMedia[]
+  News      News[]
 }
 
 model Category {
@@ -56,7 +59,8 @@ model Category {
   updatedAt DateTime @updatedAt
 
   Filter    Filter[]
-  Post      Post[]
+  SocialMedia      SocialMedia[]
+  News      News[]
 }
 
 model Filter {
@@ -74,16 +78,13 @@ model Filter {
   Category  Category @relation(fields: [category_id], references: [id])
 }
 
-model Post {
+model News {
   id        String      @id @default(uuid())
-  author   String?
-  caption     String? @db.Text
-  published_at DateTime?
-  crime_type    String?
-  likes    Int?
-  comments Int?
-  post_url  String? @db.Text
-  media_url  String? @db.Text
+  title     String
+  source    String
+  url       String
+  published_at DateTime
+  crime_type String?
   platform_id String
   category_id String
   createdAt DateTime @default(now())
@@ -91,4 +92,25 @@ model Post {
 
   Platform  Platform @relation(fields: [platform_id], references: [id])
   Category  Category @relation(fields: [category_id], references: [id])
+}
+
+model SocialMedia {
+  id        String      @id @default(uuid())
+  username  String?
+  caption     String? @db.Text
+  media_url       String?
+  published_at DateTime?
+  like_count    Int?
+  comment_count Int?
+  post_url  String? @db.Text
+  crime_type String?
+  platform_id String
+  category_id String
+  user_id   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Platform  Platform @relation(fields: [platform_id], references: [id])
+  Category  Category @relation(fields: [category_id], references: [id])
+  User      User     @relation(fields: [user_id], references: [id])
 }

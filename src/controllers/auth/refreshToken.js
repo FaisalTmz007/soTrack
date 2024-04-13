@@ -31,7 +31,7 @@ const refreshToken = async (req, res) => {
       }
     );
 
-    res.json({
+    res.header("Authorization", `Bearer ${accessToken}`).json({
       message: "Access token has been refreshed",
       statusCode: 200,
       data: {

@@ -1,31 +1,31 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
-require('dotenv').config();
+require("dotenv").config();
 
 const authenticate = (req, res, next) => {
-    try {
-        const authHeader = req.headers['authorization'];
+  try {
+    const authHeader = req.headers["authorization"];
 
-        const token = authHeader && authHeader.split(' ')[1];
-        if (token == null) return res.sendStatus(401);
+    const token = authHeader && authHeader.split(" ")[1];
+    if (token == null) return res.sendStatus(401);
 
-        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-            if (err) {
-                return res.status(403).json({ 
-                    error: 'Invalid token',
-                    statusCode: 403,
-                    message: err.message,
-                 });
-            }
-            req.user = user;
-            next();
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        return res.status(403).json({
+          error: "Invalid token",
+          statusCode: 403,
+          message: err.message,
         });
-    } catch (error) {
-        res.status(400).json({ 
-            error: 'An error has occured',
-            message: error.message,
-         });
-    }
+      }
+      req.user = user;
+      next();
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: "An error has occured",
+      message: error.message,
+    });
+  }
 };
 
 module.exports = authenticate;

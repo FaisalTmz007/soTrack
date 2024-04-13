@@ -81,6 +81,7 @@ async function getData(page) {
           date: date,
           link: link,
           slug: slug,
+          source: "beritajatim",
         });
       }
     });

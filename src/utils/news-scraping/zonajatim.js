@@ -83,6 +83,7 @@ async function getData(page) {
         imgSrc: imgSrc,
         date: date,
         link: link,
+        source: "zonajatim",
       });
     });
   } catch (error) {

@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 const criminalReport = async (req, res) => {
   try {
     // count data from post table group by published_at in every 1 month
-    const data = await prisma.post.findMany({
+    const data = await prisma.News.findMany({
       select: {
         published_at: true,
         id: true,

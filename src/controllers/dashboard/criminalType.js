@@ -5,7 +5,7 @@ const criminalType = async (req, res) => {
   const { from, to } = req.query;
 
   try {
-    const data = await prisma.Post.findMany({
+    const data = await prisma.News.findMany({
       where: {
         published_at: {
           gte: new Date(from),
