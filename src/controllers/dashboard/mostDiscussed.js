@@ -68,9 +68,35 @@ const mostDiscussed = async (req, res) => {
         );
       });
 
+      const updatedInstagramTagsinRange = await Promise.all(
+        instagramTagsinRange.map(async (tag) => {
+          const translatedcaption = await translate(tag.caption, {
+            from: "id",
+            to: "en",
+          });
+
+          const predict = await axios.post(`${process.env.FLASK_URL}/predict`, {
+            headline: translatedcaption,
+          });
+
+          // Add crime_type property to tag object
+          return {
+            ...tag,
+            crime_type: predict.data.prediction,
+          };
+        })
+      );
+
+      const countsByType = updatedInstagramTagsinRange.reduce((acc, tag) => {
+        const crimeType = tag.crime_type;
+        if (!acc[crimeType]) acc[crimeType] = 0;
+        acc[crimeType]++;
+        return acc;
+      }, {});
+
       return res.status(200).json({
         message: "Success",
-        data: instagramTagsinRange,
+        data: countsByType,
       });
     } else if (platform.toLowerCase() === "facebook") {
       const page_info = await axios.get(
@@ -124,9 +150,16 @@ const mostDiscussed = async (req, res) => {
         })
       );
 
+      const countsByType = updatedFacebookTagsinRange.reduce((acc, tag) => {
+        const crimeType = tag.crime_type;
+        if (!acc[crimeType]) acc[crimeType] = 0;
+        acc[crimeType]++;
+        return acc;
+      }, {});
+
       return res.status(200).json({
         message: "Success",
-        data: updatedFacebookTagsinRange,
+        data: countsByType,
       });
     }
   } catch (error) {
