@@ -90,7 +90,7 @@ def index():
 def predict():
     data = request.get_json()
     headline = data['headline']
-    headline = preprocess_text(headline)
+    # headline = preprocess_text(headline)
     text = m.transform([headline]).toarray()
     prediction = model.predict(text)[0]
     return jsonify({'prediction': prediction, 'headline': headline})
