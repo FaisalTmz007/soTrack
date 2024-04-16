@@ -47,7 +47,7 @@ const facebookCallback = async function (req, res) {
       //   },
       // });
       .redirect(
-        `https://social-media-monitoring-frontend.vercel.app/auth/facebook/callback?facebook_user_id=${req.user.id}`
+        `${process.env.FRONTEND_URL}/auth/facebook/callback?facebook_user_id=${req.user.id}`
       );
   } catch (error) {
     res.status(500).json({ error: error.message });
