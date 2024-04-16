@@ -59,39 +59,37 @@ passport.deserializeUser(function (obj, cb) {
   cb(null, obj);
 });
 
-passport.use(
-  new FacebookStrategy(
-    {
-      clientID: process.env.FACEBOOK_APP_ID,
-      clientSecret: process.env.FACEBOOK_APP_SECRET,
-      callbackURL: process.env.FACEBOOK_CALLBACK_URL,
-    },
-    function (accessToken, refreshToken, profile, done) {
-      console.log("🚀 ~ accessToken:", accessToken);
-      profile.accessToken = accessToken;
-      return done(null, profile);
-    }
-  )
-);
-
-// if (process.env.NODE_ENV === "production") {
-
-// } else {
-//   passport.use(
-//     new FacebookStrategy(
-//       {
-//         clientID: process.env.FACEBOOK_APP_ID,
-//         clientSecret: process.env.FACEBOOK_APP_SECRET,
-//         callbackURL: process.env.FACEBOOK_CALLBACK_URL_DEV,
-//       },
-//       function (accessToken, refreshToken, profile, done) {
-//         console.log("🚀 ~ accessToken:", accessToken);
-//         profile.accessToken = accessToken;
-//         return done(null, profile);
-//       }
-//     )
-//   );
-// }
+if (process.env.NODE_ENV === "production") {
+  passport.use(
+    new FacebookStrategy(
+      {
+        clientID: process.env.FACEBOOK_APP_ID,
+        clientSecret: process.env.FACEBOOK_APP_SECRET,
+        callbackURL: process.env.FACEBOOK_CALLBACK_URL_PROD,
+      },
+      function (accessToken, refreshToken, profile, done) {
+        console.log("🚀 ~ accessToken:", accessToken);
+        profile.accessToken = accessToken;
+        return done(null, profile);
+      }
+    )
+  );
+} else {
+  passport.use(
+    new FacebookStrategy(
+      {
+        clientID: process.env.FACEBOOK_APP_ID,
+        clientSecret: process.env.FACEBOOK_APP_SECRET,
+        callbackURL: process.env.FACEBOOK_CALLBACK_URL_DEV,
+      },
+      function (accessToken, refreshToken, profile, done) {
+        console.log("🚀 ~ accessToken:", accessToken);
+        profile.accessToken = accessToken;
+        return done(null, profile);
+      }
+    )
+  );
+}
 
 // default route
 app.get("/", (req, res) => {
