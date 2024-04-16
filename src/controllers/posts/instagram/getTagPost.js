@@ -36,8 +36,22 @@ const getTagPost = async (req, res) => {
         },
       }
     );
-    const ig_id = response.data.data[0].instagram_business_account.id;
-    // console.log("🚀 ~ getTagPost ~ ig_id:", ig_id);
+
+    let ig_id;
+    response.data.data.forEach((item) => {
+      if (item.instagram_business_account) {
+        ig_id = item.instagram_business_account.id;
+      }
+    });
+
+    console.log(ig_id);
+
+    if (!ig_id) {
+      return res.status(400).json({
+        error: "Unauthorized",
+        message: "Unauthorized",
+      });
+    }
 
     const user_tags = await axios.get(
       `https://graph.facebook.com/v19.0/${ig_id}/tags`,
@@ -63,52 +77,63 @@ const getTagPost = async (req, res) => {
     });
 
     const data = user_tags.data.data;
-    const platformId = igPlatform.id;
-    const categoryId = igCategory.id;
+    // const platformId = igPlatform.id;
+    // const categoryId = igCategory.id;
 
-    data.forEach(async (tag) => {
-      const tagExist = await prisma.SocialMedia.findUnique({
-        where: {
-          caption: tag.caption,
-        },
-      });
-      if (!tagExist) {
-        const translatedcaption = await translate(tag.caption, {
-          from: "id",
-          to: "en",
-        });
+    const countsByYear = data.reduce((acc, post) => {
+      const date = new Date(post.timestamp);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      let weekNumber = getWeekNumber(date);
+      // if (weekNumber > 4) weekNumber = 1;
+      if (!acc[year]) acc[year] = {};
+      if (!acc[year][month]) acc[year][month] = {};
+      if (!acc[year][month][weekNumber]) acc[year][month][weekNumber] = 0;
+      acc[year][month][weekNumber]++;
+      return acc;
+    }, {});
 
-        const predict = await axios.post(`${process.env.FLASK_URL}/predict`, {
-          headline: translatedcaption,
-        });
+    // data.forEach(async (tag) => {
+    //   const tagExist = await prisma.SocialMedia.findUnique({
+    //     where: {
+    //       caption: tag.caption,
+    //     },
+    //   });
+    //   if (!tagExist) {
+    //     const translatedcaption = await translate(tag.caption, {
+    //       from: "id",
+    //       to: "en",
+    //     });
 
-        await prisma.SocialMedia.create({
-          data: {
-            id: tag.id,
-            username: tag.username,
-            media_url: tag.media_url,
-            caption: tag.caption,
-            like_count: tag.like_count,
-            comment_count: tag.comments_count,
-            published_at: new Date(tag.timestamp),
-            crime_type: predict.data.prediction,
-            post_url: tag.permalink,
-            platform_id: platformId,
-            category_id: categoryId,
-            user_id: decoded.id,
-          },
-        });
+    //     const predict = await axios.post(`${process.env.FLASK_URL}/predict`, {
+    //       headline: translatedcaption,
+    //     });
 
-        return;
-      }
-    });
+    //     await prisma.SocialMedia.create({
+    //       data: {
+    //         id: tag.id,
+    //         username: tag.username,
+    //         media_url: tag.media_url,
+    //         caption: tag.caption,
+    //         like_count: tag.like_count,
+    //         comment_count: tag.comments_count,
+    //         published_at: new Date(tag.timestamp),
+    //         crime_type: predict.data.prediction,
+    //         post_url: tag.permalink,
+    //         platform_id: platformId,
+    //         category_id: categoryId,
+    //         user_id: decoded.id,
+    //       },
+    //     });
+
+    //     return;
+    //   }
+    // });
 
     res.json({
       message: "User tags fetched successfully",
       statusCode: 200,
-      data: {
-        user_tags: data,
-      },
+      data: countsByYear,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

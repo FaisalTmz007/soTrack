@@ -79,7 +79,7 @@ model Filter {
 }
 
 model News {
-  id        String      @id @default(uuid())
+  id        String      @id @default(uuid()) @unique
   title     String
   source    String
   url       String
