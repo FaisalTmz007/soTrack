@@ -12,6 +12,7 @@ appRouter.get("/auth/facebook", passport.authenticate("facebook"));
 appRouter.get(
   "/auth/facebook/callback",
   passport.authenticate("facebook", {
+    successReturnToOrRedirect: `${process.env.FRONTEND_URL}/dashboard`,
     failureRedirect: "/auth/failed",
   }),
   FacebookAuthController.controllers.facebookCallback

@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 const facebookCallback = async function (req, res) {
   try {
     const refresh_token = req.cookies.refresh_token;
+    console.log("🚀 ~ facebookCallback ~ refresh_token:", refresh_token);
 
     if (!refresh_token) {
       return res.status(401).json({
