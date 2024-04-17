@@ -5,17 +5,17 @@ const prisma = new PrismaClient();
 
 const mostDiscussed = async (req, res) => {
   try {
-    const token = req.user.accessToken;
+    const token = req.cookies.facebook_access_token;
+
     const { platform, pageId, since, until } = req.query;
 
-    if (!pageId || !since || !until) {
-      return res.status(400).json({
-        error: "Bad Request",
-        message: "Please provide pageId, since and until query parameters",
-      });
-    }
-
     if (platform.toLowerCase() === "instagram") {
+      if (!pageId || !since || !until) {
+        return res.status(400).json({
+          error: "Bad Request",
+          message: "Please provide pageId, since and until query parameters",
+        });
+      }
       const page_info = await axios.get(
         `https://graph.facebook.com/v19.0/${pageId}`,
         {
@@ -99,6 +99,12 @@ const mostDiscussed = async (req, res) => {
         data: countsByType,
       });
     } else if (platform.toLowerCase() === "facebook") {
+      if (!pageId || !since || !until) {
+        return res.status(400).json({
+          error: "Bad Request",
+          message: "Please provide pageId, since and until query parameters",
+        });
+      }
       const page_info = await axios.get(
         `https://graph.facebook.com/v19.0/${pageId}`,
         {
@@ -152,6 +158,27 @@ const mostDiscussed = async (req, res) => {
 
       const countsByType = updatedFacebookTagsinRange.reduce((acc, tag) => {
         const crimeType = tag.crime_type;
+        if (!acc[crimeType]) acc[crimeType] = 0;
+        acc[crimeType]++;
+        return acc;
+      }, {});
+
+      return res.status(200).json({
+        message: "Success",
+        data: countsByType,
+      });
+    } else if (platform.toLowerCase() === "news") {
+      const data = await prisma.News.findMany({
+        where: {
+          published_at: {
+            gte: new Date(since),
+            lte: new Date(until),
+          },
+        },
+      });
+
+      const countsByType = data.reduce((acc, post) => {
+        const crimeType = post.crime_type;
         if (!acc[crimeType]) acc[crimeType] = 0;
         acc[crimeType]++;
         return acc;

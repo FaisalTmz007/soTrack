@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 const mentionSource = async (req, res) => {
   try {
-    const token = req.user.accessToken;
+    const token = req.cookies.facebook_access_token;
 
     const { pageId, since, until } = req.query;
 

@@ -22,7 +22,13 @@ appRouter.get(
 
 appRouter.get(
   "/mostDiscussed",
-  [isLoggedIn],
+  (req, res, next) => {
+    if (req.query.platform === "news") {
+      DashboardController.controllers.mostDiscussed(req, res, next);
+    } else {
+      isLoggedIn(req, res, next);
+    }
+  },
   DashboardController.controllers.mostDiscussed
 );
 

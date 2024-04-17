@@ -11,7 +11,9 @@ appRouter.get("/auth/facebook", passport.authenticate("facebook"));
 // Route callback untuk autentikasi Facebook
 appRouter.get(
   "/auth/facebook/callback",
-  passport.authenticate("facebook", { failureRedirect: "/auth/failed" }),
+  passport.authenticate("facebook", {
+    failureRedirect: "/auth/failed",
+  }),
   FacebookAuthController.controllers.facebookCallback
 );
 
