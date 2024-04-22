@@ -17,10 +17,6 @@ appRouter.get(
   FacebookController.controllers.facebookGetUser
 );
 
-appRouter.get(
-  "/facebook/page",
-  isLoggedIn,
-  FacebookController.controllers.facebookGetPage
-);
+appRouter.get("/facebook/page", FacebookController.controllers.facebookGetPage);
 
 module.exports = appRouter;

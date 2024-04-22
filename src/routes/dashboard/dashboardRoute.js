@@ -16,20 +16,10 @@ appRouter.get(
 
 appRouter.get(
   "/mentionSource",
-  [isLoggedIn],
+  // [isLoggedIn],
   DashboardController.controllers.mentionSource
 );
 
-appRouter.get(
-  "/mostDiscussed",
-  (req, res, next) => {
-    if (req.query.platform === "news") {
-      DashboardController.controllers.mostDiscussed(req, res, next);
-    } else {
-      isLoggedIn(req, res, next);
-    }
-  },
-  DashboardController.controllers.mostDiscussed
-);
+appRouter.get("/mostDiscussed", DashboardController.controllers.mostDiscussed);
 
 module.exports = appRouter;

@@ -3,9 +3,6 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const morgan = require("morgan");
 const axios = require("axios");
-const session = require("express-session");
-const passport = require("passport");
-const FacebookStrategy = require("passport-facebook").Strategy;
 const authRoute = require("./routes/auth/authRoute");
 const facebookAuthRoute = require("./routes/auth/facebookAuthRoute");
 const categoryRoute = require("./routes/filterSettings/category/categoryRoute");
@@ -22,74 +19,11 @@ const corsOptions = {
   credentials: true,
 };
 
-// middlewares
-app.use(
-  session({
-    resave: false,
-    saveUninitialized: true,
-    secret: "SECRET",
-    cookie: { maxAge: 2 * 30 * 24 * 60 * 60 * 1000 }, // 2 months
-  })
-);
-
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-
-// Passport Facebook
-app.use(
-  session({
-    resave: false,
-    saveUninitialized: true,
-    secret: "SECRET",
-    cookie: { maxAge: 2 * 30 * 24 * 60 * 60 * 1000 }, // 2 months
-  })
-);
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-passport.serializeUser(function (user, cb) {
-  cb(null, user);
-});
-
-passport.deserializeUser(function (obj, cb) {
-  cb(null, obj);
-});
-
-if (process.env.NODE_ENV === "production") {
-  passport.use(
-    new FacebookStrategy(
-      {
-        clientID: process.env.FACEBOOK_APP_ID,
-        clientSecret: process.env.FACEBOOK_APP_SECRET,
-        callbackURL: process.env.FACEBOOK_CALLBACK_URL_PROD,
-      },
-      function (accessToken, refreshToken, profile, done) {
-        console.log("🚀 ~ accessToken:", accessToken);
-        profile.accessToken = accessToken;
-        return done(null, profile);
-      }
-    )
-  );
-} else {
-  passport.use(
-    new FacebookStrategy(
-      {
-        clientID: process.env.FACEBOOK_APP_ID,
-        clientSecret: process.env.FACEBOOK_APP_SECRET,
-        callbackURL: process.env.FACEBOOK_CALLBACK_URL_DEV,
-      },
-      function (accessToken, refreshToken, profile, done) {
-        console.log("🚀 ~ accessToken:", accessToken);
-        profile.accessToken = accessToken;
-        return done(null, profile);
-      }
-    )
-  );
-}
 
 // default route
 app.get("/", (req, res) => {

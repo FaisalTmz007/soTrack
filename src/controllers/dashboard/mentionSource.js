@@ -63,12 +63,6 @@ const mentionSource = async (req, res) => {
         tagTimestamp <= convertToTimestamp(until)
       );
     });
-    // console.log(
-    //   "🚀 ~ instagramTagsinRange ~ instagramTagsinRange:",
-    //   instagramTagsinRange
-    // );
-
-    // console.log("ig :", instagramTagsinRange.length);
 
     const fb_page_token = page_info.data.access_token;
     // console.log("🚀 ~ countInstagramTag ~ token:", token);
@@ -129,7 +123,10 @@ const mentionSource = async (req, res) => {
 
     const results = Object.entries(dataLength)
       .filter(([platform, count]) => count > 0)
-      .map(([platform, count]) => `${platform}: ${count}`);
+      .reduce((obj, [platform, count]) => {
+        obj[platform] = count;
+        return obj;
+      }, {});
 
     return res.json({
       message: "Data has been fetched",

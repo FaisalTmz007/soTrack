@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 const mostDiscussed = async (req, res) => {
   try {
     const token = req.cookies.facebook_access_token;
+    console.log("🚀 ~ mostDiscussed ~ token:", token);
 
     const { platform, pageId, since, until } = req.query;
 
@@ -86,6 +87,10 @@ const mostDiscussed = async (req, res) => {
           };
         })
       );
+      // console.log(
+      //   "🚀 ~ mostDiscussed ~ updatedInstagramTagsinRange:",
+      //   updatedInstagramTagsinRange
+      // );
 
       const countsByType = updatedInstagramTagsinRange.reduce((acc, tag) => {
         const crimeType = tag.crime_type;
@@ -187,6 +192,11 @@ const mostDiscussed = async (req, res) => {
       return res.status(200).json({
         message: "Success",
         data: countsByType,
+      });
+    } else {
+      return res.status(400).json({
+        error: "Bad Request",
+        message: "Invalid platform. Please provide valid platform",
       });
     }
   } catch (error) {

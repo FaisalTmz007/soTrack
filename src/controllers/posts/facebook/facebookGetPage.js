@@ -5,7 +5,8 @@ const prisma = new PrismaClient();
 
 const facebookGetPage = async (req, res) => {
   try {
-    const token = req.user.accessToken;
+    const token = req.cookies.facebook_access_token;
+    console.log("🚀 ~ facebookGetPage ~ token:", token);
     const refresh_token = req.cookies.refresh_token;
 
     const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);

@@ -1,53 +1,36 @@
-const { PrismaClient } = require("@prisma/client");
-const jwt = require("jsonwebtoken");
-const generateToken = require("../../../utils/generateToken");
-const prisma = new PrismaClient();
+const axios = require("axios");
 
-const facebookCallback = async function (req, res) {
+const facebookCallback = async (req, res) => {
+  const { code } = req.query;
+  console.log("🚀 ~ router.get ~ code:", code);
+
   try {
-    const refresh_token = req.cookies.refresh_token;
+    // Exchange authorization code for access token
+    const { data } = await axios.get(
+      `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${process.env.FACEBOOK_APP_ID}&client_secret=${process.env.FACEBOOK_APP_SECRET}&code=${code}&redirect_uri=${process.env.FACEBOOK_CALLBACK_URL_DEV}`
+    );
 
-    if (!refresh_token) {
-      return res.status(401).json({
-        error: "Unauthorized",
-        message: "Unauthorized",
-      });
-    }
+    const { access_token } = data;
 
-    const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
+    // Use access_token to fetch user profile
+    const { data: profile } = await axios.get(
+      `https://graph.facebook.com/v19.0/me?fields=name,email&access_token=${access_token}`
+    );
+    console.log("🚀 ~ appRouter.get ~ profile:", profile);
 
-    const userUpdate = await prisma.User.update({
-      where: {
-        id: decoded.id,
-      },
-      data: {
-        facebook_id: req.user.id,
-      },
-    });
-
-    const token = await generateToken(userUpdate);
+    // Code to handle user authentication and retrieval using the profile data
 
     res
-      .header("Authorization", `Bearer ${token.accessToken}`)
-      .cookie("refresh_token", token.refreshToken, {
+      .cookie("facebook_access_token", access_token, {
         httpOnly: true,
-        sameSite: "none",
         secure: true,
+        sameSite: "none",
       })
-      .cookie("facebook_access_token", req.user.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-      })
-      .json({
-        message: "Logged in successfully",
-        statusCode: 200,
-        data: {
-          facebook_user_id: req.user.id,
-          access_token: req.user.accessToken,
-        },
-      });
+      .redirect(`${process.env.FRONTEND_URL}/dashboard`);
+    // .redirect("/profile");
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error:", error.response.data.error);
+    res.redirect("/");
   }
 };
 
