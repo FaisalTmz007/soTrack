@@ -5,6 +5,7 @@ require("dotenv").config();
 const authenticate = (req, res, next) => {
   try {
     const authHeader = req.headers["authorization"];
+    console.log("🚀 ~ authenticate ~ authHeader:", authHeader);
 
     const token = authHeader && authHeader.split(" ")[1];
     if (token == null) return res.sendStatus(401);
