@@ -1,5 +1,4 @@
 const { appRouter } = require("../index");
-const axios = require("axios");
 const {
   FacebookAuthController,
 } = require("../../controllers/auth/facebook/index");
@@ -18,5 +17,10 @@ appRouter.get(
   "/auth/failed",
   FacebookAuthController.controllers.facebookAuthFailed
 );
+
+// appRouter.get(
+//   "/facebook/logout",
+//   FacebookAuthController.controllers.facebookLogout
+// );
 
 module.exports = appRouter;

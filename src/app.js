@@ -2,6 +2,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const morgan = require("morgan");
+const session = require("express-session");
 const axios = require("axios");
 const authRoute = require("./routes/auth/authRoute");
 const facebookAuthRoute = require("./routes/auth/facebookAuthRoute");
@@ -9,6 +10,7 @@ const categoryRoute = require("./routes/filterSettings/category/categoryRoute");
 const filterRoute = require("./routes/filterSettings/filter/filterRoute");
 const platformRoute = require("./routes/filterSettings/platform/platformRoute");
 const dashboardRoute = require("./routes/dashboard/dashboardRoute");
+const timelineRoute = require("./routes/timeline/timelineRoute");
 const facebookRoute = require("./routes/posts/facebook/facebookRoute");
 const instagramRoute = require("./routes/posts/instagram/instagramRoute");
 const getNews = require("./controllers/posts/news/getNews");
@@ -18,6 +20,16 @@ const corsOptions = {
   origin: true,
   credentials: true,
 };
+
+// middlewares
+app.use(
+  session({
+    resave: false,
+    saveUninitialized: true,
+    secret: "SECRET",
+    cookie: { maxAge: 2 * 30 * 24 * 60 * 60 * 1000 }, // 2 months
+  })
+);
 
 app.use(express.json());
 app.use(cors(corsOptions));
@@ -41,6 +53,7 @@ app.use(categoryRoute);
 app.use(filterRoute);
 app.use(platformRoute);
 app.use(dashboardRoute);
+app.use(timelineRoute);
 
 // sosmed route
 app.use(facebookRoute);

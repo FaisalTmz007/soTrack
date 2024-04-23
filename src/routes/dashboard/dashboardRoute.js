@@ -22,4 +22,9 @@ appRouter.get(
 
 appRouter.get("/mostDiscussed", DashboardController.controllers.mostDiscussed);
 
+appRouter.get(
+  "/mentionDetails",
+  DashboardController.controllers.mentionDetails
+);
+
 module.exports = appRouter;
