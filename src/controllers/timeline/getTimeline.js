@@ -10,7 +10,7 @@ const getTimeline = async (req, res) => {
     const token = req.cookies.facebook_access_token;
 
     if (platform.toLowerCase() === "instagram") {
-      const { order, pageId } = req.query;
+      const { pageId } = req.query;
 
       const { hashtag } = req.query ? req.query : "";
       const { mention } = req.query ? req.query : "";
@@ -23,6 +23,7 @@ const getTimeline = async (req, res) => {
       }
 
       if (hashtag) {
+        const { order } = req.query;
         // separate the hashtag by comma
         const hashtags = hashtag.split(",");
         // console.log("🚀 ~ getTimeline ~ pageId:", pageId);
@@ -102,7 +103,7 @@ const getTimeline = async (req, res) => {
 
         const allPosts = await Promise.all(postPromises);
 
-        const results = {
+        const predictType = {
           posts: await Promise.all(
             allPosts.flatMap(
               async (posts) =>
@@ -143,14 +144,14 @@ const getTimeline = async (req, res) => {
           ),
         };
 
+        const result = predictType.posts[0];
+
         return res.json({
           message: "Success",
           statusCode: 200,
-          data: results,
+          data: result,
         });
       } else if (mention) {
-        const { pageId } = req.query;
-
         const instagramId = await axios.get(
           `https://graph.facebook.com/v19.0/${pageId}`,
           {
@@ -177,8 +178,6 @@ const getTimeline = async (req, res) => {
             params: {
               fields:
                 "id, username, comments_count,like_count,caption, permalink, timestamp",
-              since: convertToTimestamp(since),
-              until: convertToTimestamp(until),
               access_token: token,
             },
           }
