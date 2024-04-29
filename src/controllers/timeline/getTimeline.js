@@ -1,73 +1,307 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const translate = require("translate-google");
 const axios = require("axios");
 
 const getTimeline = async (req, res) => {
   try {
-    const { platform, hashtag, order } = req.query;
-    console.log(
-      "🚀 ~ getTimeline ~ platfom, hashtag, order:",
-      platform,
-      hashtag,
-      order
-    );
-    const token = req.cookies.facebook_access_token;
-    console.log("🚀 ~ getTimeline ~ token:", token);
+    const { platform } = req.query;
 
-    // separate the hashtag by comma
-    const hashtags = hashtag.split(",");
+    const token = req.cookies.facebook_access_token;
 
     if (platform.toLowerCase() === "instagram") {
-      const { pageId } = req.query;
-      console.log("🚀 ~ getTimeline ~ pageId:", pageId);
+      const { order, pageId } = req.query;
 
-      const instagramId = await axios.get(
-        `https://graph.facebook.com/v19.0/${pageId}`,
-        {
-          params: {
-            fields: "instagram_business_account",
-            access_token: token,
-          },
-        }
-      );
-      console.log("🚀 ~ getTimeline ~ instagramId:", instagramId.data);
+      const { hashtag } = req.query ? req.query : "";
+      const { mention } = req.query ? req.query : "";
 
-      if (!instagramId.data.instagram_business_account) {
+      if (!hashtag && !mention) {
         return res.status(400).json({
-          error: "Unauthorized",
-          message: `Connect your Instagram account with this facebook page first: ${facebook_page_name}`,
+          error: "Bad Request",
+          message: "Please provide hashtag or mention query parameters",
         });
       }
 
-      const instagramBusinessId =
-        instagramId.data.instagram_business_account.id;
+      if (hashtag) {
+        // separate the hashtag by comma
+        const hashtags = hashtag.split(",");
+        // console.log("🚀 ~ getTimeline ~ pageId:", pageId);
 
-      if (order === "mostpopular") {
-        hashtags.forEach(async (tag) => {
-          const hashtagId = await axios.get(
-            `https://graph.facebook.com/v19.0/ig_hashtag_search?user_id=${instagramBusinessId}&q=${tag}&access_token=${token}`
-          );
+        const instagramId = await axios.get(
+          `https://graph.facebook.com/v19.0/${pageId}`,
+          {
+            params: {
+              fields: "instagram_business_account",
+              access_token: token,
+            },
+          }
+        );
+        // console.log("🚀 ~ getTimeline ~ instagramId:", instagramId.data);
 
-          const getPost = await axios.get(
-            `https://graph.facebook.com/v19.0/${hashtagId.data.id}/top_media`,
+        if (!instagramId.data.instagram_business_account) {
+          return res.status(400).json({
+            error: "Unauthorized",
+            message: `Connect your Instagram account with this facebook page first: ${facebook_page_name}`,
+          });
+        }
+
+        const instagramBusinessId =
+          instagramId.data.instagram_business_account.id;
+
+        let endpoint;
+        if (order === "mostpopular") {
+          endpoint = "top_media";
+        } else if (order === "newest") {
+          endpoint = "recent_media";
+        } else {
+          return res.status(400).json({
+            error: "Bad Request",
+            message: "Invalid order parameter",
+          });
+        }
+
+        const postPromises = hashtags.map(async (tag) => {
+          const hashtagIdResponse = await axios.get(
+            `https://graph.facebook.com/v19.0/ig_hashtag_search`,
             {
               params: {
                 user_id: instagramBusinessId,
-                fields:
-                  "id,media_type,media_url,caption,timestamp,permalink,like_count,comments_count",
+                q: tag,
                 access_token: token,
               },
             }
           );
+
+          console.log(
+            "🚀 ~ postPromises ~ hashtagIdResponse:",
+            hashtagIdResponse.data.data
+          );
+
+          const hashtagId = hashtagIdResponse.data.data[0]?.id; // Access the id property correctly
+          console.log("🚀 ~ postPromises ~ hashtagId:", hashtagId);
+
+          if (!hashtagId) {
+            console.error("Failed to get hashtag ID for tag:", tag);
+            return []; // Return an empty array if the hashtagId is not found
+          }
+
+          const getPost = await axios.get(
+            `https://graph.facebook.com/v19.0/${hashtagId}/${endpoint}`,
+            {
+              params: {
+                user_id: instagramBusinessId,
+                fields:
+                  "id,media_url,caption,timestamp,permalink,like_count,comments_count",
+                access_token: token,
+              },
+            }
+          );
+
+          return getPost.data.data;
         });
-      } else if (order === "newest") {
+
+        const allPosts = await Promise.all(postPromises);
+
+        const results = {
+          posts: await Promise.all(
+            allPosts.flatMap(
+              async (posts) =>
+                await Promise.all(
+                  posts.map(async (post) => {
+                    const {
+                      id,
+                      caption,
+                      timestamp,
+                      permalink,
+                      like_count,
+                      comments_count,
+                    } = post;
+
+                    const translatedcaption = await translate(caption, {
+                      to: "en",
+                    });
+
+                    const predict = await axios.post(
+                      `${process.env.FLASK_URL}/predict`,
+                      {
+                        headline: translatedcaption,
+                      }
+                    );
+
+                    return {
+                      id,
+                      caption: caption,
+                      timestamp,
+                      permalink,
+                      like_count,
+                      comments_count,
+                      about: predict.data.prediction,
+                    };
+                  })
+                )
+            )
+          ),
+        };
+
+        return res.json({
+          message: "Success",
+          statusCode: 200,
+          data: results,
+        });
+      } else if (mention) {
+        const { pageId } = req.query;
+
+        const instagramId = await axios.get(
+          `https://graph.facebook.com/v19.0/${pageId}`,
+          {
+            params: {
+              fields: "instagram_business_account",
+              access_token: token,
+            },
+          }
+        );
+
+        if (!instagramId.data.instagram_business_account) {
+          return res.status(400).json({
+            error: "Bad Request",
+            message: "The page does not have an Instagram account",
+          });
+        }
+
+        const instagram_business_account =
+          instagramId.data.instagram_business_account.id;
+
+        const instagramTags = await axios.get(
+          `https://graph.facebook.com/v19.0/${instagram_business_account}/tags`,
+          {
+            params: {
+              fields:
+                "id, username, comments_count,like_count,caption, permalink, timestamp",
+              since: convertToTimestamp(since),
+              until: convertToTimestamp(until),
+              access_token: token,
+            },
+          }
+        );
+
+        const posts = instagramTags.data.data;
+
+        const updatedPost = await Promise.all(
+          posts.map(async (post) => {
+            const translatedcaption = await translate(post.caption, {
+              to: "en",
+            });
+
+            const predict = await axios.post(
+              `${process.env.FLASK_URL}/predict`,
+              {
+                headline: translatedcaption,
+              }
+            );
+
+            return {
+              id: post.id,
+              date: post.timestamp,
+              mention: post.caption,
+              url: post.permalink,
+              about: predict.data.prediction,
+            };
+          })
+        );
+
+        return res.json({
+          message: "Success",
+          statusCode: 200,
+          data: updatedPost,
+        });
       }
     } else if (platform.toLowerCase() === "facebook") {
+      const { pageId } = req.query;
+
+      const page_info = await axios.get(
+        `https://graph.facebook.com/v19.0/${pageId}`,
+        {
+          params: {
+            fields: "name, access_token",
+            access_token: token,
+          },
+        }
+      );
+
+      const fb_page_token = page_info.data.access_token;
+
+      const taggedPost = await axios.get(
+        `https://graph.facebook.com/v19.0/${pageId}/tagged`,
+        {
+          params: {
+            fields: `id, message, tagged_time, permalink_url`,
+            access_token: fb_page_token,
+          },
+        }
+      );
+
+      const posts = taggedPost.data.data;
+      console.log("🚀 ~ getTimeline ~ posts:", posts);
+
+      const updatedPost = await Promise.all(
+        posts.map(async (post) => {
+          const translatedcaption = await translate(post.message, { to: "en" });
+
+          const predict = await axios.post(`${process.env.FLASK_URL}/predict`, {
+            headline: translatedcaption,
+          });
+
+          return {
+            id: post.id,
+            date: post.tagged_time,
+            mention: post.message,
+            url: post.permalink_url,
+            about: predict.data.prediction,
+          };
+        })
+      );
+
+      return res.json({
+        message: "Success",
+        statusCode: 200,
+        data: updatedPost,
+      });
     } else if (platform.toLowerCase() === "news") {
+      const { keyword } = req.query ? req.query : "";
+
+      if (!keyword) {
+        // order the news by date
+        const news = await prisma.news.findMany({});
+
+        return res.json({
+          message: "Success",
+          statusCode: 200,
+          data: news,
+        });
+      }
+
+      const news = await prisma.news.findMany({
+        where: {
+          title: {
+            contains: keyword,
+          },
+        },
+      });
+
+      return res.json({
+        message: "Success",
+        statusCode: 200,
+        data: news,
+      });
     }
 
-    res.json({ message: hashtags });
-  } catch (error) {}
+    // res.json({ message: hashtags });
+  } catch (error) {
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "An error occurred while processing your request",
+    });
+  }
 };
 
 module.exports = getTimeline;

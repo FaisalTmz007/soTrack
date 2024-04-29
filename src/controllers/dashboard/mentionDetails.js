@@ -47,7 +47,7 @@ const mentionDetails = async (req, res) => {
         `https://graph.facebook.com/v19.0/${pageId}/tagged`,
         {
           params: {
-            fields: `id, message, created_time, shares, comments, likes`,
+            fields: `id, message, created_time, permalink_url`,
             since: convertToTimestamp(since),
             until: convertToTimestamp(until),
             access_token: fb_page_token,
@@ -64,8 +64,11 @@ const mentionDetails = async (req, res) => {
           });
 
           return {
-            ...post,
-            crime_type: predict.data.prediction,
+            id: post.id,
+            date: post.created_time,
+            url: post.permalink_url,
+            mention: post.message,
+            about: predict.data.prediction,
           };
         })
       );
@@ -79,8 +82,9 @@ const mentionDetails = async (req, res) => {
         });
       } else {
         const filteredPost = updatedPost.filter(
-          (post) => post.crime_type === capitalizedTopic
+          (post) => post.about === capitalizedTopic
         );
+        console.log("🚀 ~ mentionDetails ~ filteredPost:", filteredPost);
 
         return res.json({
           message: "Success",
@@ -116,7 +120,7 @@ const mentionDetails = async (req, res) => {
         {
           params: {
             fields:
-              "id, username, comments_count,like_count,caption, media_type, media_url, timestamp",
+              "id, username, comments_count,like_count,caption, permalink, timestamp",
             since: convertToTimestamp(since),
             until: convertToTimestamp(until),
             access_token: token,
@@ -143,11 +147,15 @@ const mentionDetails = async (req, res) => {
           });
 
           return {
-            ...tag,
+            id: tag.id,
+            date: tag.timestamp,
+            url: tag.permalink,
+            mention: tag.caption,
             crime_type: predict.data.prediction,
           };
         })
       );
+      console.log("🚀 ~ mentionDetails ~ updatedTags:", updatedTags);
 
       if (capitalizedTopic === "All") {
         return res.json({
@@ -177,15 +185,24 @@ const mentionDetails = async (req, res) => {
         },
       });
 
+      const results = news.map((post) => {
+        return {
+          id: post.id,
+          date: post.published_at,
+          url: post.url,
+          mention: post.headline,
+          about: post.crime_type,
+        };
+      });
       if (capitalizedTopic === "All") {
         return res.json({
           message: "Success",
           statusCode: 200,
-          data: news,
+          data: results,
         });
       } else {
-        const filteredNews = news.filter(
-          (post) => post.crime_type === capitalizedTopic
+        const filteredNews = results.filter(
+          (post) => post.about === capitalizedTopic
         );
         return res.json({
           message: "Success",
