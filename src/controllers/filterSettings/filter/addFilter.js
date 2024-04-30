@@ -16,11 +16,9 @@ const addFilter = async (req, res) => {
     const user_id = decoded.id;
     // console.log(user_id);
 
-    const parameterName = capitalize(parameter);
-
     const filterExist = await prisma.Filter.findFirst({
       where: {
-        parameter: parameterName,
+        parameter,
         user_id,
         platform_id,
       },
@@ -32,7 +30,7 @@ const addFilter = async (req, res) => {
 
     const filter = await prisma.Filter.create({
       data: {
-        parameter: parameterName,
+        parameter,
         user_id,
         platform_id,
         category_id,

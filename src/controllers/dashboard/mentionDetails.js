@@ -57,7 +57,8 @@ const mentionDetails = async (req, res) => {
       console.log("🚀 ~ mentionDetails ~ posts:", posts.data.data);
       const updatedPost = await Promise.all(
         posts.data.data.map(async (post) => {
-          const translatedcaption = await translate(post.message, { to: "en" });
+          const caption = post.message ? post.message : "No caption";
+          const translatedcaption = await translate(caption, { to: "en" });
 
           const predict = await axios.post(`${process.env.FLASK_URL}/predict`, {
             headline: translatedcaption,
@@ -67,7 +68,7 @@ const mentionDetails = async (req, res) => {
             id: post.id,
             date: post.created_time,
             url: post.permalink_url,
-            mention: post.message,
+            mention: caption,
             about: predict.data.prediction,
           };
         })
@@ -140,7 +141,8 @@ const mentionDetails = async (req, res) => {
 
       const updatedTags = await Promise.all(
         instagramTagsinRange.map(async (tag) => {
-          const translatedcaption = await translate(tag.caption, { to: "en" });
+          const caption = tag.caption ? tag.caption : "No caption";
+          const translatedcaption = await translate(caption, { to: "en" });
 
           const predict = await axios.post(`${process.env.FLASK_URL}/predict`, {
             headline: translatedcaption,
@@ -150,7 +152,7 @@ const mentionDetails = async (req, res) => {
             id: tag.id,
             date: tag.timestamp,
             url: tag.permalink,
-            mention: tag.caption,
+            mention: caption,
             crime_type: predict.data.prediction,
           };
         })

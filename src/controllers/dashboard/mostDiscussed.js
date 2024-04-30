@@ -71,7 +71,8 @@ const mostDiscussed = async (req, res) => {
 
       const updatedInstagramTagsinRange = await Promise.all(
         instagramTagsinRange.map(async (tag) => {
-          const translatedcaption = await translate(tag.caption, {
+          const caption = tag.caption ? tag.caption : "No caption";
+          const translatedcaption = await translate(caption, {
             from: "id",
             to: "en",
           });
@@ -144,7 +145,8 @@ const mostDiscussed = async (req, res) => {
 
       const updatedFacebookTagsinRange = await Promise.all(
         facebookTagsinRange.map(async (tag) => {
-          const translatedcaption = await translate(tag.message, {
+          const caption = tag.message ? tag.message : "No caption";
+          const translatedcaption = await translate(caption, {
             from: "id",
             to: "en",
           });

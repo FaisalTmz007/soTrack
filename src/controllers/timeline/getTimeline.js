@@ -12,8 +12,8 @@ const getTimeline = async (req, res) => {
     if (platform.toLowerCase() === "instagram") {
       const { pageId } = req.query;
 
-      const { hashtag } = req.query ? req.query : "";
-      const { mention } = req.query ? req.query : "";
+      const { hashtag } = req.query ? req.query : null;
+      const { mention } = req.query ? req.query : null;
 
       if (!hashtag && !mention) {
         return res.status(400).json({
@@ -73,13 +73,7 @@ const getTimeline = async (req, res) => {
             }
           );
 
-          console.log(
-            "🚀 ~ postPromises ~ hashtagIdResponse:",
-            hashtagIdResponse.data.data
-          );
-
           const hashtagId = hashtagIdResponse.data.data[0]?.id; // Access the id property correctly
-          console.log("🚀 ~ postPromises ~ hashtagId:", hashtagId);
 
           if (!hashtagId) {
             console.error("Failed to get hashtag ID for tag:", tag);
@@ -118,7 +112,9 @@ const getTimeline = async (req, res) => {
                       comments_count,
                     } = post;
 
-                    const translatedcaption = await translate(caption, {
+                    const captionValue = caption ? caption : "No caption";
+
+                    const translatedcaption = await translate(captionValue, {
                       to: "en",
                     });
 
@@ -131,7 +127,7 @@ const getTimeline = async (req, res) => {
 
                     return {
                       id,
-                      caption: caption,
+                      caption: captionValue,
                       timestamp,
                       permalink,
                       like_count,
@@ -152,6 +148,7 @@ const getTimeline = async (req, res) => {
           data: result,
         });
       } else if (mention) {
+        console.log(mention);
         const instagramId = await axios.get(
           `https://graph.facebook.com/v19.0/${pageId}`,
           {
@@ -187,7 +184,8 @@ const getTimeline = async (req, res) => {
 
         const updatedPost = await Promise.all(
           posts.map(async (post) => {
-            const translatedcaption = await translate(post.caption, {
+            const caption = post.caption ? post.caption : "No caption";
+            const translatedcaption = await translate(caption, {
               to: "en",
             });
 
@@ -201,7 +199,7 @@ const getTimeline = async (req, res) => {
             return {
               id: post.id,
               date: post.timestamp,
-              mention: post.caption,
+              mention: caption,
               url: post.permalink,
               about: predict.data.prediction,
             };
@@ -240,11 +238,12 @@ const getTimeline = async (req, res) => {
       );
 
       const posts = taggedPost.data.data;
-      console.log("🚀 ~ getTimeline ~ posts:", posts);
+      // console.log("🚀 ~ getTimeline ~ posts:", posts);
 
       const updatedPost = await Promise.all(
         posts.map(async (post) => {
-          const translatedcaption = await translate(post.message, { to: "en" });
+          const caption = post.message ? post.message : "No caption";
+          const translatedcaption = await translate(caption, { to: "en" });
 
           const predict = await axios.post(`${process.env.FLASK_URL}/predict`, {
             headline: translatedcaption,
@@ -253,7 +252,7 @@ const getTimeline = async (req, res) => {
           return {
             id: post.id,
             date: post.tagged_time,
-            mention: post.message,
+            mention: caption,
             url: post.permalink_url,
             about: predict.data.prediction,
           };
@@ -296,9 +295,10 @@ const getTimeline = async (req, res) => {
 
     // res.json({ message: hashtags });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       error: "Internal Server Error",
-      message: "An error occurred while processing your request",
+      message: error.message,
     });
   }
 };
