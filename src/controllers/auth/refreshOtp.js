@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
-const sendOTPEmail = require("../../utils/sendOTPEmail");
+const sendEmail = require("../../services/emailService");
 const { generateOTP, otpExpired } = require("../../utils/generateOTP");
 const prisma = new PrismaClient();
 
@@ -36,7 +36,14 @@ const refreshOtp = async (req, res) => {
       },
     });
 
-    await sendOTPEmail(user.email, otp);
+    const otp_message = `Your OTP code is <b>${otp}</b>.`;
+
+    const subject = "OTP Verification";
+
+    // send otp to email
+    await sendEmail(user.email, subject, otp_message);
+
+    // await sendOTPEmail(user.email, otp);
 
     res.json({
       message: "OTP has been refreshed",

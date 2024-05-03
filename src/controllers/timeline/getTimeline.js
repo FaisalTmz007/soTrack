@@ -114,17 +114,6 @@ const getTimeline = async (req, res) => {
 
                     const captionValue = caption ? caption : "No caption";
 
-                    const translatedcaption = await translate(captionValue, {
-                      to: "en",
-                    });
-
-                    const predict = await axios.post(
-                      `${process.env.FLASK_URL}/predict`,
-                      {
-                        headline: translatedcaption,
-                      }
-                    );
-
                     return {
                       id,
                       caption: captionValue,
@@ -132,7 +121,6 @@ const getTimeline = async (req, res) => {
                       permalink,
                       like_count,
                       comments_count,
-                      about: predict.data.prediction,
                     };
                   })
                 )
@@ -185,23 +173,14 @@ const getTimeline = async (req, res) => {
         const updatedPost = await Promise.all(
           posts.map(async (post) => {
             const caption = post.caption ? post.caption : "No caption";
-            const translatedcaption = await translate(caption, {
-              to: "en",
-            });
-
-            const predict = await axios.post(
-              `${process.env.FLASK_URL}/predict`,
-              {
-                headline: translatedcaption,
-              }
-            );
 
             return {
               id: post.id,
-              date: post.timestamp,
-              mention: caption,
-              url: post.permalink,
-              about: predict.data.prediction,
+              caption: caption,
+              timestamp: post.timestamp,
+              permalink: post.permalink,
+              like_count: post.like_count,
+              comments_count: post.comments_count,
             };
           })
         );
@@ -243,18 +222,12 @@ const getTimeline = async (req, res) => {
       const updatedPost = await Promise.all(
         posts.map(async (post) => {
           const caption = post.message ? post.message : "No caption";
-          const translatedcaption = await translate(caption, { to: "en" });
-
-          const predict = await axios.post(`${process.env.FLASK_URL}/predict`, {
-            headline: translatedcaption,
-          });
 
           return {
             id: post.id,
-            date: post.tagged_time,
-            mention: caption,
-            url: post.permalink_url,
-            about: predict.data.prediction,
+            timestamp: post.tagged_time,
+            caption: caption,
+            permalink: post.permalink_url,
           };
         })
       );
@@ -271,10 +244,22 @@ const getTimeline = async (req, res) => {
         // order the news by date
         const news = await prisma.news.findMany({});
 
+        const updateNews = await Promise.all(
+          news.map(async (post) => {
+            return {
+              id: post.id,
+              source: post.source,
+              timestamp: post.createdAt,
+              caption: post.title,
+              permalink: post.url,
+            };
+          })
+        );
+
         return res.json({
           message: "Success",
           statusCode: 200,
-          data: news,
+          data: updateNews,
         });
       }
 
@@ -286,10 +271,22 @@ const getTimeline = async (req, res) => {
         },
       });
 
+      const updateNews = await Promise.all(
+        news.map(async (post) => {
+          return {
+            id: post.id,
+            source: post.source,
+            timestamp: post.createdAt,
+            caption: post.title,
+            permalink: post.url,
+          };
+        })
+      );
+
       return res.json({
         message: "Success",
         statusCode: 200,
-        data: news,
+        data: updateNews,
       });
     }
 

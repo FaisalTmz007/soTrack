@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
-const sendResetEmail = require("../../utils/sendResetEmail");
+const sendEmail = require("../../services/emailService");
 
 require("dotenv").config();
 const prisma = new PrismaClient();
@@ -42,7 +42,12 @@ const forgotPassword = async (req, res) => {
 
     const reset_pass_link = `${process.env.CLIENT_URL}/resetPassword?reset=${reset_password}`;
 
-    sendResetEmail(user.email, reset_pass_link);
+    const subject = "Reset Password";
+
+    // send reset password link to email
+    await sendEmail(user.email, subject, reset_pass_link);
+
+    // sendResetEmail(user.email, reset_pass_link);
 
     res.json({
       message: "Password reset link has been sent to your email",

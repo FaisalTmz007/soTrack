@@ -1,10 +1,12 @@
 const nodemailer = require("nodemailer");
 
-const sendOTPEmail = (email, otp) => {
+const sendEmail = async (email, subject, message, attachment) => {
+  // send email here
   const transporter = nodemailer.createTransport({
-    // host: "sandbox.smtp.mailtrap.io",
-    // port: 2525,
     service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD,
@@ -12,10 +14,14 @@ const sendOTPEmail = (email, otp) => {
   });
 
   const mailOptions = {
-    from: process.env.EMAIL,
+    from: {
+      name: "Socialens",
+      address: process.env.EMAIL,
+    },
     to: email,
-    subject: "One Time Password",
-    text: `Your OTP is ${otp}`,
+    subject: subject,
+    html: message,
+    attachments: attachment,
   };
 
   return new Promise((resolve, reject) => {
@@ -29,4 +35,4 @@ const sendOTPEmail = (email, otp) => {
   });
 };
 
-module.exports = sendOTPEmail;
+module.exports = sendEmail;

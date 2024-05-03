@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const sendOTPEmail = require("../../utils/sendOTPEmail");
+const sendEmail = require("../../services/emailService");
 const { generateOTP, otpExpired } = require("../../utils/generateOTP");
 const prisma = new PrismaClient();
 
@@ -48,10 +48,13 @@ const login = async (req, res) => {
     });
     // console.log(otp, otp_expired)
 
-    otp_token_link = `${process.env.CLIENT_URL}/verifyOtp?otp_token=${otp_token}`;
+    const otp_message = `Your OTP code is <b>${otp}</b>.`;
+
+    const subject = "OTP Verification";
 
     // send otp to email
-    await sendOTPEmail(user.email, otp);
+    await sendEmail(user.email, subject, otp_message);
+    // await sendOTPEmail(user.email, otp);
 
     console.log(otp_token);
     res.header("Authorization", `Bearer ${otp_token}`);

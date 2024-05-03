@@ -1,6 +1,7 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const session = require("express-session");
 const axios = require("axios");
@@ -11,6 +12,7 @@ const filterRoute = require("./routes/filterSettings/filter/filterRoute");
 const platformRoute = require("./routes/filterSettings/platform/platformRoute");
 const dashboardRoute = require("./routes/dashboard/dashboardRoute");
 const timelineRoute = require("./routes/timeline/timelineRoute");
+const broadcastRoute = require("./routes/broadcast/broadcastRoute");
 const facebookRoute = require("./routes/posts/facebook/facebookRoute");
 const instagramRoute = require("./routes/posts/instagram/instagramRoute");
 const getNews = require("./controllers/posts/news/getNews");
@@ -34,6 +36,8 @@ app.use(
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use(morgan("dev"));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
@@ -58,6 +62,9 @@ app.use(timelineRoute);
 // sosmed route
 app.use(facebookRoute);
 app.use(instagramRoute);
+
+// broadcast route
+app.use(broadcastRoute);
 
 // catch 404 and forward to error handler
 app.use(function (req, res) {
