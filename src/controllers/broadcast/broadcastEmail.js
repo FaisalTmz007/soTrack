@@ -1,11 +1,47 @@
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+const jwt = require("jsonwebtoken");
 const sendEmail = require("../../services/emailService");
 
 const broadcastEmail = async (req, res) => {
   try {
-    const { email, subject, message } = req.body;
+    const { email, subject, date, city, message } = req.body;
     const files = req.files;
+    const refresh_token = req.cookies.refresh_token;
 
-    await sendEmail(email, subject, message, files);
+    if (!refresh_token) {
+      return res.status(400).json({
+        error: "Bad Request",
+        message: "Please provide a valid refresh token",
+      });
+    }
+
+    const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
+
+    const fullMessage = `
+  <p>Tanggal: ${date}</p>
+  <p>Kota: ${city}</p>
+  <br>
+  <p>${message}</p>
+`;
+
+    await sendEmail(email, subject, fullMessage, files);
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: decoded.id,
+      },
+    });
+
+    await prisma.EmailBroadcast.create({
+      data: {
+        receipient: email,
+        message: message,
+        date: new Date(date),
+        city: city,
+        user_id: user.id,
+      },
+    });
 
     res.json({
       message: "Email has been sent",
@@ -13,7 +49,7 @@ const broadcastEmail = async (req, res) => {
       data: {
         to: email,
         subject,
-        message,
+        message: fullMessage,
         attachments: files.map((file) => file.filename),
       },
     });

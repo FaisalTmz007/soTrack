@@ -27,6 +27,7 @@ model User {
   UserToken UserToken[]
   Filter    Filter[]
   SocialMedia      SocialMedia[]
+  EmailBroadcast EmailBroadcast[]
 }
 
 model UserToken {
@@ -112,5 +113,16 @@ model SocialMedia {
 
   Platform  Platform @relation(fields: [platform_id], references: [id])
   Category  Category @relation(fields: [category_id], references: [id])
+  User      User     @relation(fields: [user_id], references: [id])
+}
+
+model EmailBroadcast {
+  id        String      @id @default(uuid())
+  receipient String
+  message    String @db.Text
+  date       DateTime
+  city       String
+  user_id    String
+
   User      User     @relation(fields: [user_id], references: [id])
 }
