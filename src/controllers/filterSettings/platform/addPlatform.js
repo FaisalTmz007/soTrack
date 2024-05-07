@@ -11,7 +11,6 @@ const addPlatform = async (req, res) => {
     const platform = await prisma.Platform.findUnique({
       where: {
         name: platformName,
-        logo_url,
       },
     });
 
@@ -25,6 +24,7 @@ const addPlatform = async (req, res) => {
     const platformCreate = await prisma.Platform.create({
       data: {
         name: platformName,
+        logo_url,
       },
     });
 

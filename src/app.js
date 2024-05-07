@@ -13,6 +13,7 @@ const platformRoute = require("./routes/filterSettings/platform/platformRoute");
 const dashboardRoute = require("./routes/dashboard/dashboardRoute");
 const timelineRoute = require("./routes/timeline/timelineRoute");
 const broadcastRoute = require("./routes/broadcast/broadcastRoute");
+const publicReportRoute = require("./routes/publicReport/publicReportRoute");
 const facebookRoute = require("./routes/posts/facebook/facebookRoute");
 const instagramRoute = require("./routes/posts/instagram/instagramRoute");
 const getNews = require("./controllers/posts/news/getNews");
@@ -58,6 +59,7 @@ app.use(filterRoute);
 app.use(platformRoute);
 app.use(dashboardRoute);
 app.use(timelineRoute);
+app.use(publicReportRoute);
 
 // sosmed route
 app.use(facebookRoute);

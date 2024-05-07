@@ -15,10 +15,15 @@ const getAllEmail = async (req, res) => {
 
     const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
 
+    const { page = 1, limit = 10 } = req.query; // Default limit to 10, default page to 1
+    const skip = (page - 1) * limit;
+
     const emails = await prisma.EmailBroadcast.findMany({
       where: {
         user_id: decoded.id,
       },
+      skip: parseInt(skip),
+      take: parseInt(limit),
     });
 
     res.json({
@@ -28,7 +33,7 @@ const getAllEmail = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({
-      error: "An error has occured",
+      error: "An error has occurred",
       message: error.message,
     });
   }
