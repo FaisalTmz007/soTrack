@@ -28,6 +28,7 @@ model User {
   Filter    Filter[]
   SocialMedia      SocialMedia[]
   EmailBroadcast EmailBroadcast[]
+  PublicReport PublicReport[]
 }
 
 model UserToken {
@@ -123,6 +124,27 @@ model EmailBroadcast {
   date       DateTime
   city       String
   user_id    String
+  attachments String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User      User     @relation(fields: [user_id], references: [id])
+}
+
+model PublicReport {
+  id        String      @id @default(uuid())
+  name    String
+  email    String
+  phone    String
+  category String
+  province String
+  city String
+  message String @db.Text
+  attachments String?  @db.Text
+  is_handled Boolean @default(false)
+  user_id   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   User      User     @relation(fields: [user_id], references: [id])
 }

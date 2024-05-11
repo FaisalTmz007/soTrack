@@ -15,12 +15,39 @@ const getAllEmail = async (req, res) => {
 
     const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
 
-    const { page = 1, limit = 10 } = req.query; // Default limit to 10, default page to 1
+    const { since, until, page = 1, limit = 10 } = req.query; // Default limit to 10, default page to 1
     const skip = (page - 1) * limit;
+
+    if (req.query.q) {
+      const emails = await prisma.EmailBroadcast.findMany({
+        where: {
+          user_id: decoded.id,
+          message: {
+            contains: req.query.q,
+          },
+          createdAt: {
+            gte: new Date(since),
+            lte: new Date(until),
+          },
+        },
+        skip: parseInt(skip),
+        take: parseInt(limit),
+      });
+
+      return res.json({
+        message: `All emails containing ${req.query.q}`,
+        statusCode: 200,
+        data: emails,
+      });
+    }
 
     const emails = await prisma.EmailBroadcast.findMany({
       where: {
         user_id: decoded.id,
+        createdAt: {
+          gte: new Date(since),
+          lte: new Date(until),
+        },
       },
       skip: parseInt(skip),
       take: parseInt(limit),

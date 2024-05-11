@@ -40,6 +40,7 @@ const broadcastEmail = async (req, res) => {
         date: new Date(date),
         city: city,
         user_id: user.id,
+        attachments: files.map((file) => file.filename).join(","),
       },
     });
 

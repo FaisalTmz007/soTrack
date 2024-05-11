@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 
 const deleteEmailById = async (req, res) => {
   const { id } = req.params;
@@ -19,6 +21,14 @@ const deleteEmailById = async (req, res) => {
       return res.status(401).json({
         error: "Unauthorized",
         message: "You are not authorized to delete this email",
+      });
+    }
+
+    // Delete files from local storage
+    if (email.attachments) {
+      const files = email.attachments.split(",");
+      files.forEach((file) => {
+        fs.unlinkSync(path.join(__dirname, `../../../public/uploads/${file}`));
       });
     }
 
