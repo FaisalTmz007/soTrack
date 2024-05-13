@@ -5,6 +5,8 @@ const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const session = require("express-session");
 const axios = require("axios");
+const passport = require("passport");
+const FacebookStrategy = require("passport-facebook").Strategy;
 const authRoute = require("./routes/auth/authRoute");
 const facebookAuthRoute = require("./routes/auth/facebookAuthRoute");
 const categoryRoute = require("./routes/filterSettings/category/categoryRoute");
@@ -17,6 +19,8 @@ const publicReportRoute = require("./routes/publicReport/publicReportRoute");
 const facebookRoute = require("./routes/posts/facebook/facebookRoute");
 const instagramRoute = require("./routes/posts/instagram/instagramRoute");
 const getNews = require("./controllers/posts/news/getNews");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 const app = express();
 
 const corsOptions = {
@@ -30,9 +34,19 @@ app.use(
     resave: false,
     saveUninitialized: true,
     secret: "SECRET",
-    cookie: { maxAge: 2 * 30 * 24 * 60 * 60 * 1000 }, // 2 months
+    // cookie: { maxAge: 2 * 30 * 24 * 60 * 60 * 1000 }, // 2 months
   })
 );
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser(function (user, cb) {
+  cb(null, user);
+});
+passport.deserializeUser(function (obj, cb) {
+  cb(null, obj);
+});
 
 app.use(express.json());
 app.use(cors(corsOptions));
@@ -41,6 +55,60 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+passport.use(
+  new FacebookStrategy(
+    {
+      clientID: process.env.FACEBOOK_APP_ID,
+      clientSecret: process.env.FACEBOOK_APP_SECRET,
+      callbackURL:
+        process.env.NODE_ENV === "production"
+          ? process.env.FACEBOOK_CALLBACK_URL_PROD
+          : process.env.FACEBOOK_CALLBACK_URL_DEV,
+      profileFields: ["id", "emails", "name"],
+    },
+    async function (accessToken, refreshToken, profile, cb) {
+      console.log(profile.emails[0].value);
+
+      const user = await prisma.User.findUnique({
+        where: {
+          facebook_id: profile.id,
+        },
+      });
+      if (!user) {
+        console.log("Adding new facebook user to DB..");
+        const userExist = await prisma.User.findUnique({
+          where: {
+            email: profile.emails[0].value,
+          },
+        });
+
+        if (!userExist) {
+          // Redirect to error route with message
+          return cb(null, false);
+        }
+
+        const newUser = await prisma.User.update({
+          where: {
+            email: profile.emails[0].value,
+          },
+          data: {
+            facebook_id: profile.id,
+          },
+        });
+
+        // Attach accessToken to the user object
+        newUser.accessToken = accessToken;
+        return cb(null, newUser);
+      } else {
+        console.log("Facebook User already exist in DB..");
+        // Attach accessToken to the user object
+        user.accessToken = accessToken;
+        return cb(null, user);
+      }
+    }
+  )
+);
 
 // default route
 app.get("/", (req, res) => {
