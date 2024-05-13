@@ -143,8 +143,19 @@ model PublicReport {
   attachments String?  @db.Text
   is_handled Boolean @default(false)
   user_id   String
+  category_id String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   User      User     @relation(fields: [user_id], references: [id])
+  PublicReportCategory  PublicReportCategory @relation(fields: [category_id], references: [id])
+}
+
+model PublicReportCategory {
+  id        String      @id @default(uuid())
+  name    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  PublicReport PublicReport[]
 }

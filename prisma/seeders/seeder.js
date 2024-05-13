@@ -34,6 +34,16 @@ async function main() {
           name: "Hashtag",
         },
       ],
+    }),
+    await prisma.PublicReportCategory.createMany({
+      data: [
+        {
+          name: "Complaint",
+        },
+        {
+          name: "Suggestion",
+        },
+      ],
     });
 }
 

@@ -12,6 +12,11 @@ appRouter.get(
 appRouter.get("/report/getCity", PublicReportController.controllers.getCity);
 
 appRouter.get(
+  "/report/getAllCategory",
+  PublicReportController.controllers.getAllCategory
+);
+
+appRouter.get(
   "/report/getLinkForm",
   PublicReportController.controllers.getLinkForm
 );
