@@ -57,7 +57,7 @@ appRouter.get(
         secure: true,
         sameSite: "none",
       })
-      .redirect("/auth/facebook/success"); // ini harusnya redirect ke dashboard
+      .redirect(`${process.env.FRONTEND_URL}/dashboard`); // ini harusnya redirect ke dashboard
   }
 );
 
