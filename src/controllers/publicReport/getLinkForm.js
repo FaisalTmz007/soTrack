@@ -21,7 +21,10 @@ const getLinkForm = async (req, res) => {
       },
     });
 
-    const link = `http://localhost:3000/addReport/${user.id}`;
+    const link =
+      process.env.NODE_ENV === "production"
+        ? `${process.env.CLIENT_URL}/${user.id}`
+        : `http://localhost:3000/addReport/${user.id}`;
 
     res.json({
       message: "Link form",
