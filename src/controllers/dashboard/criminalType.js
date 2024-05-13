@@ -129,7 +129,11 @@ const criminalType = async (req, res) => {
       return acc;
     }, {});
 
-    res.json(countsByType);
+    res.json({
+      message: "Success",
+      statusCode: 200,
+      data: countsByType,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
