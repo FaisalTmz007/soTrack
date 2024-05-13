@@ -136,7 +136,6 @@ model PublicReport {
   name    String
   email    String
   phone    String
-  category String
   province String
   city String
   message String @db.Text

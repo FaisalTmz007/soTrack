@@ -4,18 +4,11 @@ const prisma = new PrismaClient();
 const addReport = async (req, res) => {
   try {
     const { user_id } = req.params;
-    const { name, email, phone, category, province, city, message } = req.body;
+    const { name, email, phone, province, city, message, category_id } =
+      req.body;
     const files = req.files;
 
-    if (
-      !name ||
-      !email ||
-      !phone ||
-      !category ||
-      !province ||
-      !city ||
-      !message
-    ) {
+    if (!name || !email || !phone || !province || !city || !message) {
       return res.status(400).json({
         error: "Bad Request",
         message: "Please provide all required fields",
@@ -27,7 +20,6 @@ const addReport = async (req, res) => {
         name,
         email,
         phone,
-        category,
         province,
         city,
         message,
@@ -35,6 +27,7 @@ const addReport = async (req, res) => {
           ? files.map((file) => file.filename).join(",")
           : null,
         user_id,
+        category_id,
       },
     });
 
