@@ -33,91 +33,44 @@ const getAllReport = async (req, res) => {
     const skip = (page - 1) * limit;
 
     if (q) {
-      if (is_handled) {
-        const reports = await prisma.publicReport.findMany({
-          where: {
-            user_id: user.id,
-            message: {
-              contains: q,
-            },
-            createdAt: {
-              gte: new Date(since),
-              lte: new Date(until),
-            },
-            is_handled: true,
+      const reports = await prisma.publicReport.findMany({
+        where: {
+          user_id: user.id,
+          message: {
+            contains: q,
           },
-          skip: parseInt(skip),
-          take: parseInt(limit),
-        });
-
-        return res.json({
-          message: `All reports containing ${q}`,
-          statusCode: 200,
-          data: reports,
-        });
-      } else {
-        const reports = await prisma.publicReport.findMany({
-          where: {
-            user_id: user.id,
-            message: {
-              contains: q,
-            },
-            createdAt: {
-              gte: new Date(since),
-              lte: new Date(until),
-            },
-            is_handled: false,
+          createdAt: {
+            gte: new Date(since),
+            lte: new Date(until),
           },
-          skip: parseInt(skip),
-          take: parseInt(limit),
-        });
+        },
+        skip: parseInt(skip),
+        take: parseInt(limit),
+      });
 
-        return res.json({
-          message: `All reports containing ${q}`,
-          statusCode: 200,
-          data: reports,
-        });
-      }
+      return res.json({
+        message: `All reports containing ${q}`,
+        statusCode: 200,
+        data: reports,
+      });
     } else {
-      if (is_handled) {
-        const reports = await prisma.publicReport.findMany({
-          where: {
-            user_id: user.id,
-            createdAt: {
-              gte: new Date(since),
-              lte: new Date(until),
-            },
-            is_handled: true,
+      const reports = await prisma.publicReport.findMany({
+        where: {
+          user_id: user.id,
+          createdAt: {
+            gte: new Date(since),
+            lte: new Date(until),
           },
-          skip: parseInt(skip),
-          take: parseInt(limit),
-        });
+        },
+        skip: parseInt(skip),
+        take: parseInt(limit),
+      });
 
-        return res.json({
-          message: "All reports",
-          statusCode: 200,
-          data: reports,
-        });
-      } else {
-        const reports = await prisma.publicReport.findMany({
-          where: {
-            user_id: user.id,
-            createdAt: {
-              gte: new Date(since),
-              lte: new Date(until),
-            },
-            is_handled: false,
-          },
-          skip: parseInt(skip),
-          take: parseInt(limit),
-        });
-
-        return res.json({
-          message: "All reports",
-          statusCode: 200,
-          data: reports,
-        });
-      }
+      return res.json({
+        message: "All reports",
+        statusCode: 200,
+        data: reports,
+      });
     }
   } catch (error) {
     res.status(400).json({
