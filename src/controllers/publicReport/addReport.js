@@ -31,7 +31,9 @@ const addReport = async (req, res) => {
         province,
         city,
         message,
-        attachments: files.map((file) => file.filename).join(","),
+        attachments: files
+          ? files.map((file) => file.filename).join(",")
+          : null,
         user_id,
       },
     });
