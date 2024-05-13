@@ -40,7 +40,7 @@ const getAllReport = async (req, res) => {
             message: {
               contains: q,
             },
-            created_at: {
+            createdAt: {
               gte: new Date(since),
               lte: new Date(until),
             },
@@ -62,7 +62,7 @@ const getAllReport = async (req, res) => {
             message: {
               contains: q,
             },
-            created_at: {
+            createdAt: {
               gte: new Date(since),
               lte: new Date(until),
             },
@@ -83,7 +83,7 @@ const getAllReport = async (req, res) => {
         const reports = await prisma.publicReport.findMany({
           where: {
             user_id: user.id,
-            created_at: {
+            createdAt: {
               gte: new Date(since),
               lte: new Date(until),
             },
@@ -102,7 +102,7 @@ const getAllReport = async (req, res) => {
         const reports = await prisma.publicReport.findMany({
           where: {
             user_id: user.id,
-            created_at: {
+            createdAt: {
               gte: new Date(since),
               lte: new Date(until),
             },
