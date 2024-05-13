@@ -1,7 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
-const { is } = require("translate-google/languages");
 
 const getAllReport = async (req, res) => {
   try {

@@ -16,6 +16,16 @@ appRouter.get(
   PublicReportController.controllers.getLinkForm
 );
 
+appRouter.get(
+  "/report/getAllReport",
+  PublicReportController.controllers.getAllReport
+);
+
+appRouter.get(
+  "/report/getReport/:id",
+  PublicReportController.controllers.getReportById
+);
+
 appRouter.post(
   "/report/addReport/:user_id",
   upload,
