@@ -40,7 +40,7 @@ const forgotPassword = async (req, res) => {
       },
     });
 
-    const reset_pass_link = `${process.env.CLIENT_URL}/resetPassword?reset=${reset_password}`;
+    const reset_pass_link = `${process.env.FRONTEND_URL}/resetPassword?reset=${reset_password}`;
 
     const subject = "Reset Password";
 

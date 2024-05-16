@@ -27,4 +27,16 @@ appRouter.get(
   DashboardController.controllers.mentionDetails
 );
 
+appRouter.get(
+  "/socialMediaMention",
+  DashboardController.controllers.socialMediaMention
+);
+
+appRouter.get("/newsMention", DashboardController.controllers.newsMention);
+
+appRouter.get(
+  "/mentionAnalytic",
+  DashboardController.controllers.mentionAnalytic
+);
+
 module.exports = appRouter;

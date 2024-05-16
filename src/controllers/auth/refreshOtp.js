@@ -10,7 +10,7 @@ const refreshOtp = async (req, res) => {
   try {
     const token = otpHeader && otpHeader.split(" ")[1];
     if (token == null) return res.sendStatus(401);
-    console.log("ini token: " + token);
+    // console.log("ini token: " + token);
 
     const token_decoded = jwt.verify(token, process.env.GENERATE_OTP_SECRET);
     const user = await prisma.user.findFirst({

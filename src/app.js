@@ -20,6 +20,7 @@ const facebookRoute = require("./routes/posts/facebook/facebookRoute");
 const instagramRoute = require("./routes/posts/instagram/instagramRoute");
 const getNews = require("./controllers/posts/news/getNews");
 const { PrismaClient } = require("@prisma/client");
+const { pl } = require("translate-google/languages");
 const prisma = new PrismaClient();
 const app = express();
 
@@ -70,25 +71,26 @@ passport.use(
     async function (accessToken, refreshToken, profile, cb) {
       console.log(profile.emails[0].value);
 
-      const user = await prisma.User.findUnique({
+      let user = await prisma.User.findUnique({
         where: {
           facebook_id: profile.id,
         },
       });
+
       if (!user) {
         console.log("Adding new facebook user to DB..");
-        const userExist = await prisma.User.findUnique({
+        user = await prisma.User.findUnique({
           where: {
             email: profile.emails[0].value,
           },
         });
 
-        if (!userExist) {
+        if (!user) {
           // Redirect to error route with message
           return cb(null, false);
         }
 
-        const newUser = await prisma.User.update({
+        user = await prisma.User.update({
           where: {
             email: profile.emails[0].value,
           },
@@ -96,16 +98,105 @@ passport.use(
             facebook_id: profile.id,
           },
         });
-
-        // Attach accessToken to the user object
-        newUser.accessToken = accessToken;
-        return cb(null, newUser);
       } else {
-        console.log("Facebook User already exist in DB..");
-        // Attach accessToken to the user object
-        user.accessToken = accessToken;
-        return cb(null, user);
+        console.log("Facebook User already exists in DB..");
       }
+
+      const pageListsResponse = await axios.get(
+        `https://graph.facebook.com/v19.0/${profile.id}/accounts`,
+        {
+          params: {
+            fields: "id,name,access_token,instagram_business_account",
+            access_token: accessToken,
+          },
+        }
+      );
+
+      const fbPlatform = await prisma.Platform.findUnique({
+        where: {
+          name: "Facebook",
+        },
+      });
+
+      const igPlatform = await prisma.Platform.findUnique({
+        where: {
+          name: "Instagram",
+        },
+      });
+
+      const category = await prisma.Category.findUnique({
+        where: {
+          name: "Mention",
+        },
+      });
+
+      // Process pages
+      const pages = pageListsResponse.data.data;
+
+      await Promise.all(
+        pages.map(async (page) => {
+          const pageExist = await prisma.Filter.findFirst({
+            where: {
+              parameter: page.name,
+              platform_id: fbPlatform.id,
+            },
+          });
+
+          if (!pageExist) {
+            await prisma.Filter.create({
+              data: {
+                id: page.id,
+                parameter: page.name,
+                user_id: user.id,
+                platform_id: fbPlatform.id,
+                category_id: category.id,
+              },
+            });
+          }
+
+          if (page.instagram_business_account) {
+            const igUsername = await axios.get(
+              `https://graph.facebook.com/v19.0/${page.instagram_business_account.id}`,
+              {
+                params: {
+                  fields: "username",
+                  access_token: page.access_token,
+                },
+              }
+            );
+
+            const username = igUsername.data.username;
+
+            const igExist = await prisma.Filter.findFirst({
+              where: {
+                parameter: username,
+                platform_id: igPlatform.id,
+              },
+            });
+
+            // console.log(igExist);
+
+            if (!igExist) {
+              await prisma.Filter.create({
+                data: {
+                  id: page.instagram_business_account.id,
+                  parameter: username,
+                  user_id: user.id,
+                  platform_id: igPlatform.id,
+                  category_id: category.id,
+                },
+              });
+            }
+          }
+        })
+      );
+
+      // console.log(pages);
+
+      // Attach accessToken to the user object
+      user.accessToken = accessToken;
+      // console.log("🚀 ~ cihuy:", accessToken);
+      return cb(null, user);
     }
   )
 );

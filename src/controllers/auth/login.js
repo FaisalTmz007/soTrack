@@ -14,11 +14,16 @@ const login = async (req, res) => {
       },
     });
     if (!user) {
-      return res.status(400).json({ error: "Invalid credentials" });
+      return res.status(400).json({
+        error:
+          "Oops...Your account is not registered yet. Please register your account",
+      });
     }
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(400).json({ error: "Invalid credentials" });
+      return res.status(400).json({
+        error: "Oops...Invalid email or password please check again.",
+      });
     }
     // const tokens = await generateToken(user);
     // console.log(tokens)
@@ -33,7 +38,7 @@ const login = async (req, res) => {
     };
 
     const otp_token = jwt.sign(payload, process.env.GENERATE_OTP_SECRET, {
-      expiresIn: "5m",
+      expiresIn: "7d",
     });
 
     // update user otp

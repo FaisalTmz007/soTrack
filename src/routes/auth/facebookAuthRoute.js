@@ -5,6 +5,7 @@ const { appRouter } = require("../index");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const passport = require("passport");
+const axios = require("axios");
 
 //middleware
 const isLoggedIn = (req, res, next) => {
@@ -85,6 +86,38 @@ appRouter.get("/auth/facebook/signout", async (req, res) => {
       },
     });
 
+    // const page_list = await axios.get(
+    //   `https://graph.facebook.com/v11.0/me/accounts`,
+    //   {
+    //     params: {
+    //       fields: "id,name,access_token,instagram_business_account",
+    //       access_token: user.accessToken,
+    //     },
+    //   }
+    // );
+
+    // const pages = page_list.data.data;
+    // console.log("🚀 ~ appRouter.get ~ pages:", pages);
+
+    // await Promise.all(
+    //   pages.map(async (page) => {
+    //     const igUsername = await axios.get(
+    //       `https://graph.facebook.com/v11.0/${page.instagram_business_account.id}`,
+    //       {
+    //         params: {
+    //           fields: "username",
+    //           access_token: user.accessToken,
+    //         },
+    //       }
+    //     );
+    //     await prisma.filter.delete({
+    //       where: {
+    //         OR: [{ name: page.name }, { name: igUsername.data.username }],
+    //       },
+    //     });
+    //   })
+    // );
+
     console.log("🚀 ~ user:", user);
     req.session.destroy(function (err) {
       console.log("session destroyed.");
@@ -94,7 +127,7 @@ appRouter.get("/auth/facebook/signout", async (req, res) => {
       .clearCookie("connect.sid")
       .send("Logged out successfully");
   } catch (err) {
-    res.status(400).send({ message: "Failed to sign out fb user" });
+    res.status(400).send({ message: err.message });
   }
 });
 
