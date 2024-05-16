@@ -67,9 +67,7 @@ const mentionAnalytic = async (req, res) => {
           const pageMentions = pageMentionData.data
             ? pageMentionData.data.map((item) => item.created_time)
             : [];
-          if (pageMentions.length > 0) {
-            socialMedia.pageMention = pageMentions;
-          }
+          const instagramMentions = [];
 
           if (pageData.instagram_business_account) {
             const { data: instagramData } = await axios.get(
@@ -81,12 +79,18 @@ const mentionAnalytic = async (req, res) => {
                 },
               }
             );
-            const instagramMentions = instagramData.data
-              ? instagramData.data.map((item) => item.timestamp)
-              : [];
-            if (instagramMentions.length > 0) {
-              socialMedia.instagram = instagramMentions;
-            }
+            instagramMentions.push(
+              ...(instagramData.data
+                ? instagramData.data.map((item) => item.timestamp)
+                : [])
+            );
+          }
+
+          if (pageMentions.length > 0 || instagramMentions.length > 0) {
+            socialMedia.mergedMentions = [
+              ...pageMentions,
+              ...instagramMentions,
+            ];
           }
 
           return socialMedia;
@@ -116,22 +120,13 @@ const mentionAnalytic = async (req, res) => {
 
     const socialMediaAggregated = {};
 
-    mentionPost.forEach((socialMedia) => {
-      if (socialMedia.pageMention) {
-        if (!socialMediaAggregated.pageMention)
-          socialMediaAggregated.pageMention = {};
-        aggregateMentions(
-          socialMedia.pageMention,
-          socialMediaAggregated.pageMention
-        );
-      }
-      if (socialMedia.instagram) {
-        if (!socialMediaAggregated.instagram)
-          socialMediaAggregated.instagram = {};
-        aggregateMentions(
-          socialMedia.instagram,
-          socialMediaAggregated.instagram
-        );
+    mentionPost.forEach((post) => {
+      if (post.error) {
+        socialMediaAggregated.error = post.error;
+      } else {
+        if (post.mergedMentions) {
+          aggregateMentions(post.mergedMentions, socialMediaAggregated);
+        }
       }
     });
 
@@ -195,7 +190,7 @@ const mentionAnalytic = async (req, res) => {
       message: "Data has been retrieved successfully",
       statusCode: 200,
       data: {
-        socialMedia: mentionPost,
+        socialMedia: socialMediaAggregated,
         news: countsByYear,
       },
     });
