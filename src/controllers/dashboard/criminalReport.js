@@ -1,17 +1,56 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const jwt = require("jsonwebtoken");
+
+// INI PERLU DI UBAH
 
 const criminalReport = async (req, res) => {
   try {
-    // count data from post table group by published_at in every 1 month
-    const data = await prisma.News.findMany({
-      select: {
-        published_at: true,
-        id: true,
+    const refreshToken = req.cookies.refresh_token;
+
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    const filter = await prisma.filter.findMany({
+      where: {
+        is_active: true,
+        user_id: decoded.id,
       },
     });
 
-    const countsByYear = data.reduce((acc, post) => {
+    if (filter.length === 0) {
+      return res.json({
+        message: "No filters found",
+        statusCode: 200,
+        data: "No news found",
+      });
+    }
+
+    let allNews = [];
+
+    await Promise.all(
+      filter.map(async (f) => {
+        const news = await prisma.News.findMany({
+          where: {
+            title: {
+              contains: f.parameter,
+            },
+          },
+        });
+
+        // if news length 0 dont include in the array
+        if (news.length === 0) return [];
+
+        news.forEach((n) => {
+          allNews.push(n);
+        });
+
+        return {
+          news,
+        };
+      })
+    );
+
+    const countsByYear = allNews.reduce((acc, post) => {
       const date = new Date(post.published_at);
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
@@ -23,6 +62,7 @@ const criminalReport = async (req, res) => {
       acc[year][month][weekNumber]++;
       return acc;
     }, {});
+    console.log("🚀 ~ countsByYear ~ countsByYear:", countsByYear);
 
     res.json({
       message: "Data has been fetched",

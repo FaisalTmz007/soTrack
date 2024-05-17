@@ -3,6 +3,8 @@ const prisma = new PrismaClient();
 const translate = require("translate-google");
 const axios = require("axios");
 
+// INI PERLU DI UBAH
+
 const criminalType = async (req, res) => {
   const { from, to } = req.query;
 
@@ -52,7 +54,7 @@ const criminalType = async (req, res) => {
         posts.map(async (post) => {
           const caption = post.message ? post.message : "No caption";
           const translatedCaption = await translate(caption, {
-            from: "auto",
+            from: "id",
             to: "en",
           });
 

@@ -5,15 +5,6 @@ const prisma = new PrismaClient();
 
 const mentionDetails = async (req, res) => {
   try {
-    const token = req.cookies.facebook_access_token;
-
-    if (!token) {
-      return res.status(400).json({
-        error: "Bad Request",
-        message: "Please provide a valid access token",
-      });
-    }
-
     const { platform, since, until, topic } = req.query;
 
     const capitalizedTopic = topic.charAt(0).toUpperCase() + topic.slice(1);
@@ -27,6 +18,14 @@ const mentionDetails = async (req, res) => {
     }
 
     if (platform === "facebook") {
+      const token = req.cookies.facebook_access_token;
+
+      if (!token) {
+        return res.status(400).json({
+          error: "Bad Request",
+          message: "Please provide a valid access token",
+        });
+      }
       const { pageId } = req.query;
       console.log("🚀 ~ mentionDetails ~ pageId:", pageId);
 
@@ -94,6 +93,14 @@ const mentionDetails = async (req, res) => {
         });
       }
     } else if (platform === "instagram") {
+      const token = req.cookies.facebook_access_token;
+
+      if (!token) {
+        return res.status(400).json({
+          error: "Bad Request",
+          message: "Please provide a valid access token",
+        });
+      }
       const { pageId } = req.query;
 
       const instagramId = await axios.get(

@@ -3,6 +3,8 @@ const prisma = new PrismaClient();
 const translate = require("translate-google");
 const axios = require("axios");
 
+// YANG INI PERLU DI UBAH
+
 const getTimeline = async (req, res) => {
   try {
     const { platform } = req.query;

@@ -176,12 +176,6 @@ const mentionAnalytic = async (req, res) => {
                   }
                 );
 
-                // console.log(response.data.data);
-
-                // response.data.data.forEach((media) => {
-                //   console.log(media.timestamp);
-                //   mentionData.push(media.timestamp);
-                // });
                 return response.data.data;
               } catch (error) {
                 console.log(error.message);

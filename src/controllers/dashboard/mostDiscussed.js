@@ -3,6 +3,8 @@ const translate = require("translate-google");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// INI PERLU DI UBAH
+
 const mostDiscussed = async (req, res) => {
   try {
     const token = req.cookies.facebook_access_token;
