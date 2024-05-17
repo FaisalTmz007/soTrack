@@ -2,7 +2,6 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
-const { pl, fi } = require("translate-google/languages");
 
 const mentionAnalytic = async (req, res) => {
   try {
@@ -98,17 +97,32 @@ const mentionAnalytic = async (req, res) => {
           },
         },
       });
+      console.log("🚀 ~ mentionAnalytic ~ filter:", filter);
 
       const mentionData = await Promise.all(
         filter.map(async (pf) => {
           try {
             const endpoint =
               platform === "facebook"
-                ? `https://graph.facebook.com/v11.0/${pf.id}/tagged`
+                ? `https://graph.facebook.com/v19.0/${pf.id}/tagged`
                 : `https://graph.facebook.com/v19.0/${pf.id}/tags`;
+
+            const page_info = await axios.get(
+              `https://graph.facebook.com/v19.0/${pf.id}`,
+              {
+                params: {
+                  fields: "access_token,instagram_business_account",
+                  access_token: facebookAccessToken,
+                },
+              }
+            );
+
             const response = await axios.get(endpoint, {
               params: {
-                access_token: facebookAccessToken,
+                access_token:
+                  platform === "facebook"
+                    ? page_info.data.access_token
+                    : facebookAccessToken,
                 fields: platform === "facebook" ? "created_time" : "timestamp",
               },
             });

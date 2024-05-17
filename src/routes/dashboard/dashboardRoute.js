@@ -20,22 +20,33 @@ appRouter.get(
   DashboardController.controllers.mentionSource
 );
 
-appRouter.get("/mostDiscussed", DashboardController.controllers.mostDiscussed);
+appRouter.get(
+  "/mostDiscussed",
+  [authenticate],
+  DashboardController.controllers.mostDiscussed
+);
 
 appRouter.get(
   "/mentionDetails",
+  [authenticate],
   DashboardController.controllers.mentionDetails
 );
 
 appRouter.get(
   "/socialMediaMention",
+  [authenticate],
   DashboardController.controllers.socialMediaMention
 );
 
-appRouter.get("/newsMention", DashboardController.controllers.newsMention);
+appRouter.get(
+  "/newsMention",
+  [authenticate],
+  DashboardController.controllers.newsMention
+);
 
 appRouter.get(
   "/mentionAnalytic",
+  [authenticate],
   DashboardController.controllers.mentionAnalytic
 );
 
