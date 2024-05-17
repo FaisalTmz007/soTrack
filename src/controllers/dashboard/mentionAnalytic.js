@@ -2,111 +2,64 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
+const { pl, fi } = require("translate-google/languages");
 
 const mentionAnalytic = async (req, res) => {
   try {
     const refreshToken = req.cookies.refresh_token;
-    const facebookAccessToken = req.cookies.facebook_access_token;
-    const { interval } = req.query; // Assuming the interval is passed as a query parameter
+
+    if (!refreshToken)
+      return res.status(400).json({
+        error: "Please login first",
+      });
 
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    // console.log("🚀 ~ socialMediaMention ~ decoded:", decoded);
 
-    const keywordNews = await prisma.filter.findMany({
-      where: {
-        is_active: true,
-        user_id: decoded.id,
-        Platform: {
-          name: "News",
+    const { platform } = req.query;
+
+    if (platform === "news") {
+      const keywordNews = await prisma.filter.findMany({
+        where: {
+          is_active: true,
+          user_id: decoded.id,
+          Platform: {
+            name: "News",
+          },
+          Category: {
+            name: "Keyword",
+          },
         },
-        Category: {
-          name: "Keyword",
-        },
-      },
-    });
-    // console.log("🚀 ~ mentionAnalytic ~ keywordNews:", keywordNews);
+      });
 
-    const mentionFacebook = await prisma.Filter.findMany({
-      where: {
-        is_active: true,
-        user_id: decoded.id,
-        Platform: {
-          name: "Facebook",
-        },
-        Category: {
-          name: "Mention",
-        },
-      },
-    });
-
-    const mentionPost = await Promise.all(
-      mentionFacebook.map(async (mf) => {
-        try {
-          const { data: pageData } = await axios.get(
-            `https://graph.facebook.com/v19.0/${mf.id}`,
-            {
-              params: {
-                fields: "access_token,instagram_business_account",
-                access_token: facebookAccessToken,
-              },
-            }
-          );
-
-          const { data: pageMentionData } = await axios.get(
-            `https://graph.facebook.com/v19.0/${mf.id}/tagged`,
-            {
-              params: {
-                fields: "message,from,created_time",
-                access_token: pageData.access_token,
-              },
-            }
-          );
-
-          const socialMedia = {};
-
-          const pageMentions = pageMentionData.data
-            ? pageMentionData.data.map((item) => item.created_time)
-            : [];
-          const instagramMentions = [];
-
-          if (pageData.instagram_business_account) {
-            const { data: instagramData } = await axios.get(
-              `https://graph.facebook.com/v19.0/${pageData.instagram_business_account.id}/tags`,
-              {
-                params: {
-                  fields: "timestamp",
-                  access_token: facebookAccessToken,
+      if (keywordNews.length === 0) {
+        return res.status(400).json({
+          messsage:
+            "No keyword is been activated, Please activate keyword first",
+          statusCode: 400,
+        });
+      }
+      const newsMention = await Promise.all(
+        keywordNews.map(async (mf) => {
+          try {
+            const news = await prisma.News.findMany({
+              where: {
+                title: {
+                  contains: mf.keyword,
                 },
-              }
-            );
-            instagramMentions.push(
-              ...(instagramData.data
-                ? instagramData.data.map((item) => item.timestamp)
-                : [])
-            );
+              },
+            });
+            return news;
+          } catch (error) {
+            return [];
           }
+        })
+      );
 
-          if (pageMentions.length > 0 || instagramMentions.length > 0) {
-            socialMedia.mergedMentions = [
-              ...pageMentions,
-              ...instagramMentions,
-            ];
-          }
+      // Flatten the newsMention array
+      const flattenedNewsMention = newsMention.flat();
 
-          return socialMedia;
-        } catch (error) {
-          console.error("Error fetching data:", error);
-          return {
-            error: error.message,
-          };
-        }
-      })
-    );
-
-    // Aggregate the mentions by year, month, and week
-    const aggregateMentions = (mentions, acc) => {
-      mentions.forEach((timestamp) => {
-        const date = new Date(timestamp);
+      const countsByYear = flattenedNewsMention.reduce((acc, post) => {
+        const date = new Date(post.published_at);
         const year = date.getFullYear();
         const month = date.getMonth() + 1;
         const weekNumber = getWeekNumber(date);
@@ -115,85 +68,143 @@ const mentionAnalytic = async (req, res) => {
         if (!acc[year][month]) acc[year][month] = {};
         if (!acc[year][month][weekNumber]) acc[year][month][weekNumber] = 0;
         acc[year][month][weekNumber]++;
+        return acc;
+      }, {});
+
+      return res.status(200).json({
+        message: "Data has been retrieved successfully",
+        statusCode: 200,
+        data: {
+          news: countsByYear,
+        },
       });
-    };
+    } else if (platform === "facebook" || platform === "instagram") {
+      const facebookAccessToken = req.cookies.facebook_access_token;
 
-    const socialMediaAggregated = {};
-
-    mentionPost.forEach((post) => {
-      if (post.error) {
-        socialMediaAggregated.error = post.error;
-      } else {
-        if (post.mergedMentions) {
-          aggregateMentions(post.mergedMentions, socialMediaAggregated);
-        }
+      if (!facebookAccessToken) {
+        return res.status(400).json({
+          error: "Please login to Facebook first",
+        });
       }
-    });
 
-    // Determine the date range based on the interval
-    let dateRange;
-    const now = new Date();
-    if (interval === "weekly") {
-      dateRange = new Date(now.setMonth(now.getMonth() - 1));
-    } else if (interval === "monthly") {
-      dateRange = new Date(now.setFullYear(now.getFullYear() - 1));
-    } else if (interval === "yearly") {
-      dateRange = new Date(now.setFullYear(now.getFullYear() - 5));
-    } else {
-      dateRange = new Date(now.setDate(now.getDate() - 7)); // Default to last week if no valid interval is provided
-    }
+      const filter = await prisma.Filter.findMany({
+        where: {
+          user_id: decoded.id,
+          Platform: {
+            name: platform === "facebook" ? "Facebook" : "Instagram",
+          },
+          Category: {
+            name: "Mention",
+          },
+        },
+      });
 
-    const newsResults = await Promise.all(
-      keywordNews.length === 0
-        ? [prisma.News.findMany({})]
-        : keywordNews.map(async (nf) => {
-            const news = await prisma.News.findMany({
-              where: {
-                title: {
-                  contains: nf.parameter,
-                },
-                published_at: {
-                  gte: dateRange,
-                  lte: new Date(),
-                },
+      const mentionData = await Promise.all(
+        filter.map(async (pf) => {
+          try {
+            const endpoint =
+              platform === "facebook"
+                ? `https://graph.facebook.com/v11.0/${pf.id}/tagged`
+                : `https://graph.facebook.com/v19.0/${pf.id}/tags`;
+            const response = await axios.get(endpoint, {
+              params: {
+                access_token: facebookAccessToken,
+                fields: platform === "facebook" ? "created_time" : "timestamp",
               },
             });
-            return news;
-          })
-    );
+            return response.data.data;
+          } catch (error) {
+            return [];
+          }
+        })
+      );
 
-    // console.log(newsResults);
+      // Flatten both arrays
+      let flattenedMentionData = mentionData.flat();
 
-    const flattenedNewsResults =
-      keywordNews.length === 0 ? newsResults[0] : newsResults.flat();
+      if (platform === "instagram") {
+        const hashtagFilter = await prisma.Filter.findMany({
+          where: {
+            user_id: decoded.id,
+            is_active: true,
+            Platform: {
+              name: "Instagram",
+            },
+            Category: {
+              name: "Hashtag",
+            },
+          },
+        });
 
-    const countsByYear = flattenedNewsResults.reduce((acc, post) => {
-      const date = new Date(post.published_at);
-      // console.log("🚀 ~ data.forEach ~ date:", date);
+        if (hashtagFilter.length > 0) {
+          const hashtagData = await Promise.all(
+            hashtagFilter.map(async (hf) => {
+              try {
+                const hashtagId = await axios.get(
+                  `https://graph.facebook.com/v19.0/ig_hashtag_search`,
+                  {
+                    params: {
+                      user_id: filter[0].id,
+                      q: hf.parameter,
+                      access_token: facebookAccessToken,
+                    },
+                  }
+                );
 
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const weekNumber = getWeekNumber(date);
+                const response = await axios.get(
+                  `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/recent_media`,
+                  {
+                    params: {
+                      user_id: filter[0].id,
+                      fields: "timestamp",
+                      access_token: facebookAccessToken,
+                    },
+                  }
+                );
 
-      // console.log("🚀 ~ aggregateByInterval ~ year:", year);
-      // console.log("🚀 ~ aggregateByInterval ~ month:", month);
-      // console.log("🚀 ~ aggregateByInterval ~ weekNumber:", weekNumber);
+                // console.log(response.data.data);
 
-      if (!acc[year]) acc[year] = {};
-      if (!acc[year][month]) acc[year][month] = {};
-      if (!acc[year][month][weekNumber]) acc[year][month][weekNumber] = 0;
-      acc[year][month][weekNumber]++;
-      return acc;
-    }, {});
+                // response.data.data.forEach((media) => {
+                //   console.log(media.timestamp);
+                //   mentionData.push(media.timestamp);
+                // });
+                return response.data.data;
+              } catch (error) {
+                console.log(error.message);
+                return [];
+              }
+            })
+          );
+          let flattenedHashtagData = hashtagData.flat();
 
-    res.json({
-      message: "Data has been retrieved successfully",
-      statusCode: 200,
-      data: {
-        socialMedia: socialMediaAggregated,
-        news: countsByYear,
-      },
-    });
+          // Add new data to the flattened array
+          flattenedMentionData.push(...flattenedHashtagData);
+        }
+      }
+
+      console.log(flattenedMentionData);
+
+      const countsByYear = flattenedMentionData.reduce((acc, post) => {
+        const date = new Date(
+          platform === "facebook" ? post.created_time : post.timestamp
+        );
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const weekNumber = getWeekNumber(date);
+
+        if (!acc[year]) acc[year] = {};
+        if (!acc[year][month]) acc[year][month] = {};
+        if (!acc[year][month][weekNumber]) acc[year][month][weekNumber] = 0;
+        acc[year][month][weekNumber]++;
+        return acc;
+      }, {});
+
+      return res.json({
+        message: "Data has been fetched",
+        statusCode: 200,
+        data: countsByYear,
+      });
+    }
   } catch (error) {
     res.status(400).json({
       error: "An error has occurred",

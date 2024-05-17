@@ -37,6 +37,14 @@ const socialMediaMention = async (req, res) => {
       },
     });
 
+    if (mentionFacebook.length === 0) {
+      return res.json({
+        message: "No filters found",
+        statusCode: 200,
+        data: "No social media mention found",
+      });
+    }
+
     const mentionPost = await Promise.all(
       mentionFacebook.map(async (mf) => {
         try {
