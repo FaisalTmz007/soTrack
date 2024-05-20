@@ -203,12 +203,14 @@ const mentionSource = async (req, res) => {
           },
         },
       });
+      console.log("🚀 ~ mentionSource ~ mentionFilter:", mentionFilter);
 
       let mentionPosts = [];
 
       if (mentionFilter.length > 0) {
         await Promise.all(
           mentionFilter.map(async (f) => {
+            console.log("first");
             const posts = await axios.get(
               `https://graph.facebook.com/v19.0/${f.id}/tags`,
               {
