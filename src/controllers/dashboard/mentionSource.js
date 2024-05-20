@@ -204,40 +204,34 @@ const mentionSource = async (req, res) => {
         },
       });
 
-      if (mentionFilter.length === 0) {
-        return res.json({
-          message: "No filters found",
-          statusCode: 200,
-          data: "No Instagram found",
-        });
-      }
-
       let mentionPosts = [];
 
-      await Promise.all(
-        mentionFilter.map(async (f) => {
-          const posts = await axios.get(
-            `https://graph.facebook.com/v19.0/${f.id}/tags`,
-            {
-              params: {
-                fields: "timestamp",
-                access_token: facebook_access_token,
-              },
-            }
-          );
+      if (mentionFilter.length > 0) {
+        await Promise.all(
+          mentionFilter.map(async (f) => {
+            const posts = await axios.get(
+              `https://graph.facebook.com/v19.0/${f.id}/tags`,
+              {
+                params: {
+                  fields: "timestamp",
+                  access_token: facebook_access_token,
+                },
+              }
+            );
 
-          const username = f.parameter;
+            const username = f.parameter;
 
-          posts.data.data.forEach((p) => {
-            mentionPosts.push({
-              id: p.id,
-              username,
-              filter_id: f.id,
-              timestamp: p.timestamp,
+            posts.data.data.forEach((p) => {
+              mentionPosts.push({
+                id: p.id,
+                username,
+                filter_id: f.id,
+                timestamp: p.timestamp,
+              });
             });
-          });
-        })
-      );
+          })
+        );
+      }
 
       const hashtagFilter = await prisma.Filter.findMany({
         where: {
@@ -251,54 +245,48 @@ const mentionSource = async (req, res) => {
         },
       });
 
-      if (hashtagFilter.length === 0) {
-        return res.json({
-          message: "No filters found",
-          statusCode: 200,
-          data: "No Instagram found",
-        });
-      }
-
       let hashtagPosts = [];
 
-      await Promise.all(
-        hashtagFilter.map(async (f) => {
-          const hashtagIdResponse = await axios.get(
-            `https://graph.facebook.com/v19.0/ig_hashtag_search`,
-            {
-              params: {
-                user_id: mentionFilter[0].id,
-                q: f.parameter,
-                access_token: facebook_access_token,
-              },
-            }
-          );
+      if (hashtagFilter.length > 0) {
+        await Promise.all(
+          hashtagFilter.map(async (f) => {
+            const hashtagIdResponse = await axios.get(
+              `https://graph.facebook.com/v19.0/ig_hashtag_search`,
+              {
+                params: {
+                  user_id: mentionFilter[0].id,
+                  q: f.parameter,
+                  access_token: facebook_access_token,
+                },
+              }
+            );
 
-          const hashtagId = hashtagIdResponse.data.data[0].id;
-          const hashtagName = f.parameter;
+            const hashtagId = hashtagIdResponse.data.data[0].id;
+            const hashtagName = f.parameter;
 
-          const posts = await axios.get(
-            `https://graph.facebook.com/v19.0/${hashtagId}/top_media`,
-            {
-              params: {
-                user_id: mentionFilter[0].id,
-                fields: "timestamp",
-                limit: 50,
-                access_token: facebook_access_token,
-              },
-            }
-          );
+            const posts = await axios.get(
+              `https://graph.facebook.com/v19.0/${hashtagId}/top_media`,
+              {
+                params: {
+                  user_id: mentionFilter[0].id,
+                  fields: "timestamp",
+                  limit: 50,
+                  access_token: facebook_access_token,
+                },
+              }
+            );
 
-          posts.data.data.forEach((p) => {
-            hashtagPosts.push({
-              id: p.id,
-              hashtagId,
-              hashtagName,
-              timestamp: p.timestamp,
+            posts.data.data.forEach((p) => {
+              hashtagPosts.push({
+                id: p.id,
+                hashtagId,
+                hashtagName,
+                timestamp: p.timestamp,
+              });
             });
-          });
-        })
-      );
+          })
+        );
+      }
 
       // Mention source count
       const mentionSourceCount = mentionPosts.reduce((acc, post) => {
