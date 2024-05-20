@@ -61,14 +61,31 @@ const newsMention = async (req, res) => {
           };
         })
       );
+
+      const countsByYear = newsResults[0].news.reduce((acc, curr) => {
+        const date = new Date(curr.published_at);
+
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const week = getWeekNumber(date);
+
+        if (!acc[year]) {
+          acc[year] = {};
+        }
+        if (!acc[year][month]) {
+          acc[year][month] = {};
+        }
+        if (!acc[year][month][week]) acc[year][month][week] = 0;
+        acc[year][month][week]++;
+        return acc;
+      }, {});
+
       return res.json({
         message: "Filters have been retrieved",
         statusCode: 200,
         data: {
-          news:
-            newsResults.length === 0
-              ? "No news found"
-              : newsResults[0].news.length,
+          total: newsResults[0].news.length,
+          news: countsByYear,
         },
       });
     }
@@ -79,5 +96,13 @@ const newsMention = async (req, res) => {
     });
   }
 };
+
+function getWeekNumber(date) {
+  const oneJan = new Date(date.getFullYear(), 0, 1);
+  const millisecondsInDay = 86400000;
+  return Math.ceil(
+    ((date - oneJan) / millisecondsInDay + oneJan.getDay() + 1) / 7
+  );
+}
 
 module.exports = newsMention;
