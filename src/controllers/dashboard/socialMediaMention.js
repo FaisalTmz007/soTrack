@@ -11,19 +11,6 @@ const socialMediaMention = async (req, res) => {
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
     console.log("🚀 ~ socialMediaMention ~ decoded:", decoded);
 
-    // const keywordNews = await prisma.filter.findMany({
-    //   where: {
-    //     is_active: true,
-    //     user_id: decoded.id,
-    //     Platform: {
-    //       name: "News",
-    //     },
-    //     Category: {
-    //       name: "Keyword",
-    //     },
-    //   },
-    // });
-
     const mentionFacebook = await prisma.Filter.findMany({
       where: {
         is_active: true,
@@ -108,22 +95,6 @@ const socialMediaMention = async (req, res) => {
     );
 
     console.log(aggregatedCounts);
-
-    // const newsResults = await Promise.all(
-    //   keywordNews.map(async (nf) => {
-    //     const news = await prisma.News.findMany({
-    //       where: {
-    //         title: {
-    //           contains: nf.parameter,
-    //         },
-    //       },
-    //     });
-    //     return {
-    //       news,
-    //     };
-    //   })
-    // );
-    // aggregatedCounts.news = newsResults.length;
 
     res.json({
       message: "Data has been retrieved successfully",

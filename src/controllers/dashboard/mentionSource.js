@@ -1,140 +1,315 @@
 const axios = require("axios");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-
-// INI PERLU DI UBAH
+const jwt = require("jsonwebtoken");
+const { pl } = require("translate-google/languages");
 
 const mentionSource = async (req, res) => {
   try {
-    const token = req.cookies.facebook_access_token;
+    const refreshToken = req.cookies.refresh_token;
 
-    const { pageId, since, until } = req.query;
+    if (!refreshToken) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Please login first",
+      });
+    }
 
-    if (!pageId || !since || !until) {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    const { platform, since, until } = req.query;
+
+    if (!platform || !since || !until) {
       return res.status(400).json({
         error: "Bad Request",
-        message: "Please provide pageId, since and until query parameters",
+        message: "Please provide platform, since and until query parameters",
       });
     }
 
-    const page_info = await axios.get(
-      `https://graph.facebook.com/v19.0/${pageId}`,
-      {
-        params: {
-          fields: "name, access_token",
-          access_token: token,
+    if (platform === "news") {
+      const fromDate = new Date(since);
+      const toDate = new Date(until);
+
+      const filter = await prisma.Filter.findMany({
+        where: {
+          user_id: decoded.id,
+          Platform: {
+            name: "News",
+          },
+          Category: {
+            name: "Keyword",
+          },
         },
-      }
-    );
-
-    const instagramId = await axios.get(
-      `https://graph.facebook.com/v19.0/${pageId}`,
-      {
-        params: {
-          fields: "instagram_business_account",
-          access_token: token,
-        },
-      }
-    );
-
-    facebook_page_name = page_info.data.name;
-
-    if (!instagramId.data.instagram_business_account) {
-      return res.status(400).json({
-        error: "Unauthorized",
-        message: `Connect your Instagram account with this facebook page first: ${facebook_page_name}`,
       });
-    }
+      console.log("🚀 ~ mentionSource ~ filter:", filter);
 
-    const instagramBusinessId = instagramId.data.instagram_business_account.id;
-
-    const instagramTags = await axios.get(
-      `https://graph.facebook.com/v19.0/${instagramBusinessId}/tags`,
-      {
-        params: {
-          fields: `id,username,comments_count,like_count,caption,timestamp`,
-          access_token: token,
-        },
+      if (filter.length === 0) {
+        return res.status(400).json({
+          error: "Bad Request",
+          message: "Please set your filter first",
+        });
       }
-    );
 
-    const instagramTagsinRange = instagramTags.data.data.filter((tag) => {
-      const tagTimestamp = Math.floor(new Date(tag.timestamp).getTime() / 1000);
-      return (
-        tagTimestamp >= convertToTimestamp(since) &&
-        tagTimestamp <= convertToTimestamp(until)
+      let allNews = [];
+
+      await Promise.all(
+        filter.map(async (item) => {
+          const news = await prisma.News.findMany({
+            where: {
+              title: {
+                contains: item.parameter,
+              },
+              published_at: {
+                lte: toDate,
+                gte: fromDate,
+              },
+            },
+          });
+
+          allNews = allNews.concat(news);
+        })
       );
-    });
 
-    const fb_page_token = page_info.data.access_token;
-    // console.log("🚀 ~ countInstagramTag ~ token:", token);
-    // console.log("🚀 ~ countInstagramTag ~ fb_page_token:", fb_page_token);
-
-    const fbTags = await axios.get(
-      `https://graph.facebook.com/v19.0/${pageId}/tagged`,
-      {
-        params: {
-          fields: `id,message,tagged_time`,
-          access_token: fb_page_token,
-        },
-      }
-    );
-
-    const facebookTagsinRange = fbTags.data.data.filter((tag) => {
-      const tagTimestamp = Math.floor(
-        new Date(tag.tagged_time).getTime() / 1000
-      );
-      return (
-        tagTimestamp >= convertToTimestamp(since) &&
-        tagTimestamp <= convertToTimestamp(until)
-      );
-    });
-
-    const fromDate = new Date(since);
-    const toDate = new Date(until);
-
-    const news = await prisma.News.findMany({
-      where: {
-        published_at: {
-          lte: toDate,
-          gte: fromDate,
-        },
-      },
-    });
-
-    // Count occurrences of each unique source
-    const sourceCount = {};
-    news.forEach((item) => {
-      const { source } = item;
-      if (sourceCount[source]) {
-        sourceCount[source]++;
-      } else {
-        sourceCount[source] = 1;
-      }
-    });
-
-    // console.log("🚀 ~ countInstagramTag ~ sourceCount:", sourceCount);
-
-    // console.log("fb :", facebookTagsinRange.length);
-
-    const dataLength = {
-      instagram: instagramTagsinRange.length,
-      facebook: facebookTagsinRange.length,
-      ...sourceCount,
-    };
-
-    const results = Object.entries(dataLength)
-      .filter(([platform, count]) => count > 0)
-      .reduce((obj, [platform, count]) => {
-        obj[platform] = count;
-        return obj;
+      // Source count for news per keyword
+      const sourceCount = allNews.reduce((acc, news) => {
+        if (!acc[news.source]) acc[news.source] = 0;
+        acc[news.source]++;
+        return acc;
       }, {});
 
-    return res.json({
-      message: "Data has been fetched",
-      statusCode: 200,
-      data: results,
-    });
+      return res.json({
+        message: "Data has been fetched",
+        statusCode: 200,
+        data: {
+          keyword: sourceCount,
+        },
+      });
+    } else if (platform === "facebook") {
+      const facebook_access_token = req.cookies.facebook_access_token;
+
+      if (!facebook_access_token) {
+        return res.status(401).json({
+          error: "Unauthorized",
+          message: "Please login first",
+        });
+      }
+
+      const sinceUnix = convertToTimestamp(since);
+      const untilUnix = convertToTimestamp(until);
+
+      const filter = await prisma.Filter.findMany({
+        where: {
+          user_id: decoded.id,
+          Platform: {
+            name: "Facebook",
+          },
+          Category: {
+            name: "Mention",
+          },
+        },
+      });
+
+      if (filter.length === 0) {
+        return res.status(400).json({
+          error: "Bad Request",
+          message: "Please set your filter first",
+        });
+      }
+
+      let allMentions = [];
+
+      await Promise.all(
+        filter.map(async (item) => {
+          const page_token = await axios.get(
+            `https://graph.facebook.com/v19.0/${item.id}`,
+            {
+              params: {
+                fields: "name,access_token",
+                access_token: facebook_access_token,
+              },
+            }
+          );
+
+          const page_name = page_token.data.name;
+          const page_access_token = page_token.data.access_token;
+
+          const posts = await axios.get(
+            `https://graph.facebook.com/v19.0/${item.id}/tagged`,
+            {
+              params: {
+                fields: `id,message,created_time`,
+                since: sinceUnix,
+                until: untilUnix,
+                access_token: page_access_token,
+              },
+            }
+          );
+
+          if (posts.data.data.length === 0) return [];
+
+          posts.data.data.forEach((p) => {
+            allMentions.push({
+              id: p.id,
+              message: p.message,
+              created_time: p.created_time,
+              page_name,
+            });
+          });
+        })
+      );
+
+      // Source count for facebook per page
+      const sourceCount = allMentions.reduce((acc, post) => {
+        if (!acc[post.page_name]) acc[post.page_name] = 0;
+        acc[post.page_name]++;
+        return acc;
+      }, {});
+
+      return res.json({
+        message: "Data has been fetched",
+        statusCode: 200,
+        data: {
+          mention: sourceCount,
+        },
+      });
+    } else if (platform === "instagram") {
+      const facebook_access_token = req.cookies.facebook_access_token;
+
+      if (!facebook_access_token) {
+        return res.status(401).json({
+          error: "Unauthorized",
+          message: "Please login first",
+        });
+      }
+
+      const mentionFilter = await prisma.Filter.findMany({
+        where: {
+          user_id: decoded.id,
+          Platform: {
+            name: "Instagram",
+          },
+          Category: {
+            name: "Mention",
+          },
+        },
+      });
+
+      if (mentionFilter.length === 0) {
+        return res.json({
+          message: "No filters found",
+          statusCode: 200,
+          data: "No instagram found",
+        });
+      }
+
+      let mentionPosts = [];
+
+      await Promise.all(
+        mentionFilter.map(async (f) => {
+          const posts = await axios.get(
+            `https://graph.facebook.com/v19.0/${f.id}/tags`,
+            {
+              params: {
+                fields: "timestamp",
+                access_token: facebook_access_token,
+              },
+            }
+          );
+
+          const username = f.parameter;
+
+          posts.data.data.forEach((p) => {
+            mentionPosts.push({
+              id: p.id,
+              username,
+              timestamp: p.timestamp,
+            });
+          });
+        })
+      );
+
+      const hashtagFilter = await prisma.Filter.findMany({
+        where: {
+          user_id: decoded.id,
+          Platform: {
+            name: "Instagram",
+          },
+          Category: {
+            name: "Hashtag",
+          },
+        },
+      });
+
+      if (hashtagFilter.length === 0) {
+        return res.json({
+          message: "No filters found",
+          statusCode: 200,
+          data: "No instagram found",
+        });
+      }
+
+      let hashtagPosts = [];
+
+      await Promise.all(
+        hashtagFilter.map(async (f) => {
+          const hashtagId = await axios.get(
+            `https://graph.facebook.com/v19.0/ig_hashtag_search`,
+            {
+              params: {
+                user_id: mentionFilter[0].id,
+                q: f.parameter,
+                access_token: facebook_access_token,
+              },
+            }
+          );
+
+          const hashtagName = f.parameter;
+
+          const posts = await axios.get(
+            `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/top_media`,
+            {
+              params: {
+                user_id: mentionFilter[0].id,
+                fields: "timestamp",
+                limit: 50,
+                access_token: facebook_access_token,
+              },
+            }
+          );
+
+          posts.data.data.forEach((p) => {
+            hashtagPosts.push({
+              id: p.id,
+              hashtagName,
+              timestamp: p.timestamp,
+            });
+          });
+        })
+      );
+
+      // mention source count
+      const mentionSourceCount = mentionPosts.reduce((acc, post) => {
+        if (!acc[post.username]) acc[post.username] = 0;
+        acc[post.username]++;
+        return acc;
+      }, {});
+
+      // hashtag source count
+      const hashtagSourceCount = hashtagPosts.reduce((acc, post) => {
+        if (!acc[post.hashtagName]) acc[post.hashtagName] = 0;
+        acc[post.hashtagName]++;
+        return acc;
+      }, {});
+
+      return res.json({
+        message: "Data has been fetched",
+        statusCode: 200,
+        data: {
+          mention: mentionSourceCount,
+          hashtag: hashtagSourceCount,
+        },
+      });
+    }
   } catch (error) {
     res.status(400).json({
       error: "An error has occurred",

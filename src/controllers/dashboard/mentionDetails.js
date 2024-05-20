@@ -3,9 +3,11 @@ const translate = require("translate-google");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// Menambahkan fungsi untuk mengambil berita berdasarkan platform
+
 const mentionDetails = async (req, res) => {
   try {
-    const { platform, since, until, topic } = req.query;
+    const { platform, source, since, until, topic } = req.query;
 
     const capitalizedTopic = topic.charAt(0).toUpperCase() + topic.slice(1);
 
@@ -123,75 +125,172 @@ const mentionDetails = async (req, res) => {
       const instagram_business_account =
         instagramId.data.instagram_business_account.id;
 
-      const instagramTags = await axios.get(
-        `https://graph.facebook.com/v19.0/${instagram_business_account}/tags`,
-        {
-          params: {
-            fields:
-              "id, username, comments_count,like_count,caption, permalink, timestamp",
-            since: convertToTimestamp(since),
-            until: convertToTimestamp(until),
-            access_token: token,
-          },
-        }
-      );
-
-      const instagramTagsinRange = instagramTags.data.data.filter((tag) => {
-        const tagTimestamp = Math.floor(
-          new Date(tag.timestamp).getTime() / 1000
+      if (source === "mention") {
+        const instagramTags = await axios.get(
+          `https://graph.facebook.com/v19.0/${instagram_business_account}/tags`,
+          {
+            params: {
+              fields:
+                "id, username, comments_count,like_count,caption, permalink, timestamp",
+              since: convertToTimestamp(since),
+              until: convertToTimestamp(until),
+              access_token: token,
+            },
+          }
         );
-        return (
-          tagTimestamp >= convertToTimestamp(since) &&
-          tagTimestamp <= convertToTimestamp(until)
+
+        const instagramTagsinRange = instagramTags.data.data.filter((tag) => {
+          const tagTimestamp = Math.floor(
+            new Date(tag.timestamp).getTime() / 1000
+          );
+          return (
+            tagTimestamp >= convertToTimestamp(since) &&
+            tagTimestamp <= convertToTimestamp(until)
+          );
+        });
+
+        const updatedTags = await Promise.all(
+          instagramTagsinRange.map(async (tag) => {
+            const caption = tag.caption ? tag.caption : "No caption";
+            const translatedcaption = await translate(caption, { to: "en" });
+
+            const predict = await axios.post(
+              `${process.env.FLASK_URL}/predict`,
+              {
+                headline: translatedcaption,
+              }
+            );
+
+            return {
+              id: tag.id,
+              date: tag.timestamp,
+              url: tag.permalink,
+              mention: caption,
+              crime_type: predict.data.prediction,
+            };
+          })
         );
-      });
+        console.log("🚀 ~ mentionDetails ~ updatedTags:", updatedTags);
 
-      const updatedTags = await Promise.all(
-        instagramTagsinRange.map(async (tag) => {
-          const caption = tag.caption ? tag.caption : "No caption";
-          const translatedcaption = await translate(caption, { to: "en" });
-
-          const predict = await axios.post(`${process.env.FLASK_URL}/predict`, {
-            headline: translatedcaption,
+        if (capitalizedTopic === "All") {
+          return res.json({
+            message: "Success",
+            statusCode: 200,
+            data: updatedTags,
           });
-
-          return {
-            id: tag.id,
-            date: tag.timestamp,
-            url: tag.permalink,
-            mention: caption,
-            crime_type: predict.data.prediction,
-          };
-        })
-      );
-      console.log("🚀 ~ mentionDetails ~ updatedTags:", updatedTags);
-
-      if (capitalizedTopic === "All") {
-        return res.json({
-          message: "Success",
-          statusCode: 200,
-          data: updatedTags,
+        } else {
+          const filteredTags = updatedTags.filter(
+            (tag) => tag.crime_type === capitalizedTopic
+          );
+          return res.json({
+            message: "Success",
+            statusCode: 200,
+            data: filteredTags,
+          });
+        }
+      } else if (source === "hashtag") {
+        const filter = await prisma.Filter.findMany({
+          where: {
+            is_active: true,
+            user_id: decoded.id,
+            Platform: {
+              name: "Instagram",
+            },
+            Category: {
+              name: "Hashtag",
+            },
+          },
         });
-      } else {
-        const filteredTags = updatedTags.filter(
-          (tag) => tag.crime_type === capitalizedTopic
+
+        const hashtags = filter.map((tag) => tag.keyword);
+
+        const instagramHashtags = await Promise.all(
+          hashtags.map(async (hashtag) => {
+            const hashtagId = await axios.get(
+              `https://graph.facebook.com/v19.0/ig_hashtag_search`,
+              {
+                params: {
+                  user_id: instagram_business_account,
+                  q: hashtag,
+                  access_token: token,
+                },
+              }
+            );
+
+            const instagramPost = await axios.get(
+              `https://graph.facebook.com/v19.0/${hashtagId.data.id}/recent_media`,
+              {
+                params: {
+                  fields:
+                    "id, username, comments_count,like_count,caption, permalink, timestamp",
+                  access_token: token,
+                },
+              }
+            );
+
+            return instagramPost.data.data;
+          })
         );
-        return res.json({
-          message: "Success",
-          statusCode: 200,
-          data: filteredTags,
+
+        const updatedHashtags = instagramHashtags.map((tag) => {
+          return tag.map(async (post) => {
+            const caption = post.caption ? post.caption : "No caption";
+            const translatedcaption = await translate(caption, { to: "en" });
+
+            const predict = await axios.post(
+              `${process.env.FLASK_URL}/predict`,
+              {
+                headline: translatedcaption,
+              }
+            );
+
+            return {
+              id: post.id,
+              date: post.timestamp,
+              url: post.permalink,
+              mention: caption,
+              crime_type: predict.data.prediction,
+            };
+          });
         });
+
+        console.log("🚀 ~ mentionDetails ~ updatedHashtags:", updatedHashtags);
+
+        if (capitalizedTopic === "All") {
+          return res.json({
+            message: "Success",
+            statusCode: 200,
+            data: updatedHashtags,
+          });
+        } else {
+          const filteredHashtags = updatedHashtags.filter(
+            (tag) => tag.crime_type === capitalizedTopic
+          );
+          return res.json({
+            message: "Success",
+            statusCode: 200,
+            data: filteredHashtags,
+          });
+        }
       }
 
       //   res.status(200).json(instagramTags.data.data);
     } else if (platform === "news") {
-      const news = await prisma.news.findMany({
-        where: {
-          published_at: {
-            gte: new Date(since),
-            lte: new Date(until),
-          },
+      console.log("🚀 ~ mentionDetails ~ source:", source);
+
+      const whereClause = {
+        published_at: {
+          gte: new Date(since),
+          lte: new Date(until),
         },
+      };
+
+      if (source) {
+        whereClause.source = source;
+      }
+
+      const news = await prisma.news.findMany({
+        where: whereClause,
       });
 
       const results = news.map((post) => {

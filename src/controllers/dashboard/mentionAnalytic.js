@@ -14,7 +14,41 @@ const mentionAnalytic = async (req, res) => {
 
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
-    const { platform } = req.query;
+    const { platform, period } = req.query;
+
+    if (!platform || !period) {
+      return res.status(400).json({
+        message: "Please provide platform and period query parameters",
+      });
+    }
+
+    // Get the current date
+    const now = new Date();
+
+    // Get the current month and year
+    const month = now.getMonth() + 1; // Months are zero-indexed, so add 1
+    const year = now.getFullYear();
+
+    let since;
+    const until = now;
+
+    if (period === "weekly") {
+      // get data in 1 month
+      // Construct the first date of the month
+      since = new Date(
+        `${year}-${String(month).padStart(2, "0")}-01T00:00:00Z`
+      );
+    } else if (period === "monthly") {
+      since = new Date(`${year}-01-01T00:00:00Z`);
+    } else if (period === "yearly") {
+      // get data for the past 5 years
+      const sinceYear = year - 5;
+      since = new Date(`${sinceYear}-01-01T00:00:00Z`);
+    } else {
+      return res.status(400).json({
+        message: "Please provide a valid period",
+      });
+    }
 
     if (platform === "news") {
       const keywordNews = await prisma.filter.findMany({
@@ -31,13 +65,16 @@ const mentionAnalytic = async (req, res) => {
       });
 
       if (keywordNews.length === 0) {
-        return res.status(400).json({
-          messsage:
-            "No keyword is been activated, Please activate keyword first",
-          statusCode: 400,
+        return res.json({
+          message: "Please set filter for news platform",
+          statusCode: 200,
+          data: "No news found",
         });
       }
-      const newsMention = await Promise.all(
+
+      let allNews = [];
+
+      await Promise.all(
         keywordNews.map(async (mf) => {
           try {
             const news = await prisma.News.findMany({
@@ -45,8 +82,19 @@ const mentionAnalytic = async (req, res) => {
                 title: {
                   contains: mf.keyword,
                 },
+                published_at: {
+                  gte: since,
+                  lte: until,
+                },
               },
             });
+
+            if (news.length === 0) return [];
+
+            news.forEach((n) => {
+              allNews.push(n);
+            });
+
             return news;
           } catch (error) {
             return [];
@@ -54,14 +102,11 @@ const mentionAnalytic = async (req, res) => {
         })
       );
 
-      // Flatten the newsMention array
-      const flattenedNewsMention = newsMention.flat();
-
-      const countsByYear = flattenedNewsMention.reduce((acc, post) => {
+      const countsByYear = allNews.reduce((acc, post) => {
         const date = new Date(post.published_at);
         const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const weekNumber = getWeekNumber(date);
+        const month = date.getMonth() + 1; // months are 0-indexed
+        const weekNumber = getWeekNumber(date); // Assuming getWeekNumber is defined
 
         if (!acc[year]) acc[year] = {};
         if (!acc[year][month]) acc[year][month] = {};
@@ -73,9 +118,7 @@ const mentionAnalytic = async (req, res) => {
       return res.status(200).json({
         message: "Data has been retrieved successfully",
         statusCode: 200,
-        data: {
-          news: countsByYear,
-        },
+        data: countsByYear,
       });
     } else if (platform === "facebook" || platform === "instagram") {
       const facebookAccessToken = req.cookies.facebook_access_token;
@@ -85,6 +128,10 @@ const mentionAnalytic = async (req, res) => {
           error: "Please login to Facebook first",
         });
       }
+
+      // convert since and until to UNIX
+      const sinceUnix = Math.floor(since.getTime() / 1000);
+      const untilUnix = Math.floor(until.getTime() / 1000);
 
       const filter = await prisma.Filter.findMany({
         where: {
@@ -124,6 +171,8 @@ const mentionAnalytic = async (req, res) => {
                     ? page_info.data.access_token
                     : facebookAccessToken,
                 fields: platform === "facebook" ? "created_time" : "timestamp",
+                since: sinceUnix,
+                until: untilUnix,
               },
             });
             return response.data.data;
