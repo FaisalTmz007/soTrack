@@ -226,6 +226,8 @@ const criminalReport = async (req, res) => {
         );
       }
 
+      console.log("🚀 ~ criminalReport ~ allPosts:", allPosts);
+
       const hashtagFilter = await prisma.Filter.findMany({
         where: {
           is_active: true,
