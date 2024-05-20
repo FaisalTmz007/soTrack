@@ -32,8 +32,6 @@ const socialMediaMention = async (req, res) => {
       });
     }
 
-    let result = [];
-
     const mentionPost = await Promise.all(
       mentionFacebook.map(async (mf) => {
         try {
@@ -64,6 +62,7 @@ const socialMediaMention = async (req, res) => {
             };
           });
 
+          let instagram = [];
           if (pageData.instagram_business_account) {
             const { data: instagramData } = await axios.get(
               `https://graph.facebook.com/v19.0/${pageData.instagram_business_account.id}/tags`,
@@ -74,31 +73,66 @@ const socialMediaMention = async (req, res) => {
                 },
               }
             );
+            // merge pageMention and instagramData in one array
+            instagram = instagramData.data.map((mention) => {
+              return {
+                timestamp: mention.timestamp,
+              };
+            });
           }
+
+          const posts = [...pageMention, ...instagram];
+
+          return posts.length > 0 ? { posts } : null;
         } catch (error) {
           console.error("Error fetching data:", error);
-          return {
-            pageMention: [],
-            instagram: [],
-            error: error.message,
-          };
+          return null;
         }
       })
     );
 
-    console.log(result);
+    // Filter out null entries
+    const filteredMentions = mentionPost.filter((mention) => mention !== null);
+
+    const countsByYear = filteredMentions[0].posts.reduce((acc, post) => {
+      const date = new Date(post.timestamp);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const week = getWeekNumber(date);
+
+      if (!acc[year]) {
+        acc[year] = {};
+      }
+      if (!acc[year][month]) {
+        acc[year][month] = {};
+      }
+      if (!acc[year][month][week]) acc[year][month][week] = 0;
+      acc[year][month][week]++;
+      return acc;
+    }, {});
 
     res.json({
       message: "Data has been retrieved successfully",
       statusCode: 200,
-      data: result,
+      data: {
+        total: filteredMentions[0].posts.length,
+        posts: countsByYear,
+      },
     });
   } catch (error) {
     res.status(400).json({
-      error: "An error has occured",
+      error: "An error has occurred",
       message: error.message,
     });
   }
 };
+
+function getWeekNumber(date) {
+  const oneJan = new Date(date.getFullYear(), 0, 1);
+  const millisecondsInDay = 86400000;
+  return Math.ceil(
+    ((date - oneJan) / millisecondsInDay + oneJan.getDay() + 1) / 7
+  );
+}
 
 module.exports = socialMediaMention;
