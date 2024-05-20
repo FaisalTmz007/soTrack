@@ -28,11 +28,17 @@ const mentionDetails = async (req, res) => {
           message: "Please provide a valid access token",
         });
       }
-      const { pageId } = req.query;
-      console.log("🚀 ~ mentionDetails ~ pageId:", pageId);
+      const { page_id } = req.query;
+
+      if (!page_id) {
+        return res.status(400).json({
+          error: "Bad Request",
+          message: "Please provide a valid page_id",
+        });
+      }
 
       const page_info = await axios.get(
-        `https://graph.facebook.com/v19.0/${pageId}`,
+        `https://graph.facebook.com/v19.0/${page_id}`,
         {
           params: {
             fields: "name, access_token",
@@ -45,7 +51,7 @@ const mentionDetails = async (req, res) => {
       //   console.log("🚀 ~ mentionDetails ~ fb_page_token:", fb_page_token);
 
       const posts = await axios.get(
-        `https://graph.facebook.com/v19.0/${pageId}/tagged`,
+        `https://graph.facebook.com/v19.0/${page_id}/tagged`,
         {
           params: {
             fields: `id, message, created_time, permalink_url`,
@@ -103,31 +109,19 @@ const mentionDetails = async (req, res) => {
           message: "Please provide a valid access token",
         });
       }
-      const { pageId } = req.query;
-
-      const instagramId = await axios.get(
-        `https://graph.facebook.com/v19.0/${pageId}`,
-        {
-          params: {
-            fields: "instagram_business_account",
-            access_token: token,
-          },
-        }
-      );
-
-      if (!instagramId.data.instagram_business_account) {
-        return res.status(400).json({
-          error: "Bad Request",
-          message: "The page does not have an Instagram account",
-        });
-      }
-
-      const instagram_business_account =
-        instagramId.data.instagram_business_account.id;
 
       if (source === "mention") {
+        const { instagram_id } = req.query;
+
+        if (!instagram_id) {
+          return res.status(400).json({
+            error: "Bad Request",
+            message: "Please provide a valid instagram_id",
+          });
+        }
+
         const instagramTags = await axios.get(
-          `https://graph.facebook.com/v19.0/${instagram_business_account}/tags`,
+          `https://graph.facebook.com/v19.0/${instagram_id}/tags`,
           {
             params: {
               fields:
@@ -189,52 +183,31 @@ const mentionDetails = async (req, res) => {
           });
         }
       } else if (source === "hashtag") {
-        const filter = await prisma.Filter.findMany({
-          where: {
-            is_active: true,
-            user_id: decoded.id,
-            Platform: {
-              name: "Instagram",
+        const { hashtag_id, instagram_id } = req.query;
+
+        if (!hashtag_id || !instagram_id) {
+          return res.status(400).json({
+            error: "Bad Request",
+            message: "Please provide a valid hashtag_id and instagram_id",
+          });
+        }
+
+        const instagramHashtags = await axios.get(
+          `https://graph.facebook.com/v19.0/${hashtag_id}/recent_media`,
+          {
+            params: {
+              fields: `id, caption, permalink, timestamp`,
+              user_id: instagram_id,
+              since: convertToTimestamp(since),
+              until: convertToTimestamp(until),
+              access_token: token,
             },
-            Category: {
-              name: "Hashtag",
-            },
-          },
-        });
-
-        const hashtags = filter.map((tag) => tag.keyword);
-
-        const instagramHashtags = await Promise.all(
-          hashtags.map(async (hashtag) => {
-            const hashtagId = await axios.get(
-              `https://graph.facebook.com/v19.0/ig_hashtag_search`,
-              {
-                params: {
-                  user_id: instagram_business_account,
-                  q: hashtag,
-                  access_token: token,
-                },
-              }
-            );
-
-            const instagramPost = await axios.get(
-              `https://graph.facebook.com/v19.0/${hashtagId.data.id}/recent_media`,
-              {
-                params: {
-                  fields:
-                    "id, username, comments_count,like_count,caption, permalink, timestamp",
-                  access_token: token,
-                },
-              }
-            );
-
-            return instagramPost.data.data;
-          })
+          }
         );
 
-        const updatedHashtags = instagramHashtags.map((tag) => {
-          return tag.map(async (post) => {
-            const caption = post.caption ? post.caption : "No caption";
+        const updatedHashtags = await Promise.all(
+          instagramHashtags.data.data.map(async (tag) => {
+            const caption = tag.caption ? tag.caption : "No caption";
             const translatedcaption = await translate(caption, { to: "en" });
 
             const predict = await axios.post(
@@ -245,14 +218,14 @@ const mentionDetails = async (req, res) => {
             );
 
             return {
-              id: post.id,
-              date: post.timestamp,
-              url: post.permalink,
+              id: tag.id,
+              date: tag.timestamp,
+              url: tag.permalink,
               mention: caption,
               crime_type: predict.data.prediction,
             };
-          });
-        });
+          })
+        );
 
         console.log("🚀 ~ mentionDetails ~ updatedHashtags:", updatedHashtags);
 

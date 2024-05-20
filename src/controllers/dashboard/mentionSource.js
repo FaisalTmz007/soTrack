@@ -72,8 +72,12 @@ const mentionSource = async (req, res) => {
 
       // Source count for news per keyword
       const sourceCount = allNews.reduce((acc, news) => {
-        if (!acc[news.source]) acc[news.source] = 0;
-        acc[news.source]++;
+        if (!acc[news.source]) {
+          acc[news.source] = {
+            totalPosts: 0,
+          };
+        }
+        acc[news.source].totalPosts++;
         return acc;
       }, {});
 
@@ -153,15 +157,21 @@ const mentionSource = async (req, res) => {
               message: p.message,
               created_time: p.created_time,
               page_name,
+              page_id: item.id, // Adding page_id from filter item
             });
           });
         })
       );
 
-      // Source count for facebook per page
-      const sourceCount = allMentions.reduce((acc, post) => {
-        if (!acc[post.page_name]) acc[post.page_name] = 0;
-        acc[post.page_name]++;
+      // Source count for Facebook per page and add the page id in response
+      const sourceCount = allMentions.reduce((acc, mention) => {
+        if (!acc[mention.page_name]) {
+          acc[mention.page_name] = {
+            page_id: mention.page_id,
+            totalPosts: 0,
+          };
+        }
+        acc[mention.page_name].totalPosts++;
         return acc;
       }, {});
 
@@ -198,7 +208,7 @@ const mentionSource = async (req, res) => {
         return res.json({
           message: "No filters found",
           statusCode: 200,
-          data: "No instagram found",
+          data: "No Instagram found",
         });
       }
 
@@ -222,6 +232,7 @@ const mentionSource = async (req, res) => {
             mentionPosts.push({
               id: p.id,
               username,
+              filter_id: f.id,
               timestamp: p.timestamp,
             });
           });
@@ -244,7 +255,7 @@ const mentionSource = async (req, res) => {
         return res.json({
           message: "No filters found",
           statusCode: 200,
-          data: "No instagram found",
+          data: "No Instagram found",
         });
       }
 
@@ -252,7 +263,7 @@ const mentionSource = async (req, res) => {
 
       await Promise.all(
         hashtagFilter.map(async (f) => {
-          const hashtagId = await axios.get(
+          const hashtagIdResponse = await axios.get(
             `https://graph.facebook.com/v19.0/ig_hashtag_search`,
             {
               params: {
@@ -263,10 +274,11 @@ const mentionSource = async (req, res) => {
             }
           );
 
+          const hashtagId = hashtagIdResponse.data.data[0].id;
           const hashtagName = f.parameter;
 
           const posts = await axios.get(
-            `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/top_media`,
+            `https://graph.facebook.com/v19.0/${hashtagId}/top_media`,
             {
               params: {
                 user_id: mentionFilter[0].id,
@@ -280,6 +292,7 @@ const mentionSource = async (req, res) => {
           posts.data.data.forEach((p) => {
             hashtagPosts.push({
               id: p.id,
+              hashtagId,
               hashtagName,
               timestamp: p.timestamp,
             });
@@ -287,17 +300,27 @@ const mentionSource = async (req, res) => {
         })
       );
 
-      // mention source count
+      // Mention source count
       const mentionSourceCount = mentionPosts.reduce((acc, post) => {
-        if (!acc[post.username]) acc[post.username] = 0;
-        acc[post.username]++;
+        if (!acc[post.username]) {
+          acc[post.username] = {
+            id: post.filter_id,
+            totalPosts: 0,
+          };
+        }
+        acc[post.username].totalPosts++;
         return acc;
       }, {});
 
-      // hashtag source count
+      // Hashtag source count
       const hashtagSourceCount = hashtagPosts.reduce((acc, post) => {
-        if (!acc[post.hashtagName]) acc[post.hashtagName] = 0;
-        acc[post.hashtagName]++;
+        if (!acc[post.hashtagName]) {
+          acc[post.hashtagName] = {
+            id: post.hashtagId,
+            totalPosts: 0,
+          };
+        }
+        acc[post.hashtagName].totalPosts++;
         return acc;
       }, {});
 
