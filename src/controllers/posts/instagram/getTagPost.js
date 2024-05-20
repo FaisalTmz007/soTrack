@@ -44,7 +44,7 @@ const getTagPost = async (req, res) => {
       }
     });
 
-    console.log(ig_id);
+    // console.log(ig_id);
 
     if (!ig_id) {
       return res.status(400).json({

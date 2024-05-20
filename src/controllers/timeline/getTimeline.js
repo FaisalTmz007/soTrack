@@ -138,7 +138,7 @@ const getTimeline = async (req, res) => {
           data: result,
         });
       } else if (mention) {
-        console.log(mention);
+        // console.log(mention);
         const instagramId = await axios.get(
           `https://graph.facebook.com/v19.0/${pageId}`,
           {

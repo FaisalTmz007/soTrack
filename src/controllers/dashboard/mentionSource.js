@@ -41,7 +41,7 @@ const mentionSource = async (req, res) => {
           },
         },
       });
-      console.log("🚀 ~ mentionSource ~ filter:", filter);
+      // console.log("🚀 ~ mentionSource ~ filter:", filter);
 
       let allNews = [];
 
@@ -193,14 +193,14 @@ const mentionSource = async (req, res) => {
           },
         },
       });
-      console.log("🚀 ~ mentionSource ~ mentionFilter:", mentionFilter);
+      // console.log("🚀 ~ mentionSource ~ mentionFilter:", mentionFilter);
 
       let mentionPosts = [];
 
       if (mentionFilter.length > 0) {
         await Promise.all(
           mentionFilter.map(async (f) => {
-            console.log("first");
+            // console.log("first");
             const posts = await axios.get(
               `https://graph.facebook.com/v19.0/${f.id}/tags`,
               {
@@ -210,7 +210,7 @@ const mentionSource = async (req, res) => {
                 },
               }
             );
-            console.log("🚀 ~ mentionFilter.map ~ posts:", posts);
+            // console.log("🚀 ~ mentionFilter.map ~ posts:", posts);
 
             const username = f.parameter;
 
@@ -268,7 +268,7 @@ const mentionSource = async (req, res) => {
                 },
               }
             );
-            console.log("🚀 ~ hashtagFilter.map ~ posts:", posts);
+            // console.log("🚀 ~ hashtagFilter.map ~ posts:", posts);
 
             posts.data.data.forEach((p) => {
               hashtagPosts.push({
@@ -293,10 +293,10 @@ const mentionSource = async (req, res) => {
         acc[post.username].totalPosts++;
         return acc;
       }, {});
-      console.log(
-        "🚀 ~ mentionSourceCount ~ mentionSourceCount:",
-        mentionSourceCount
-      );
+      // console.log(
+      //   "🚀 ~ mentionSourceCount ~ mentionSourceCount:",
+      //   mentionSourceCount
+      // );
 
       // Hashtag source count
       const hashtagSourceCount = hashtagPosts.reduce((acc, post) => {
@@ -309,10 +309,10 @@ const mentionSource = async (req, res) => {
         acc[post.hashtagName].totalPosts++;
         return acc;
       }, {});
-      console.log(
-        "🚀 ~ hashtagSourceCount ~ hashtagSourceCount:",
-        hashtagSourceCount
-      );
+      // console.log(
+      //   "🚀 ~ hashtagSourceCount ~ hashtagSourceCount:",
+      //   hashtagSourceCount
+      // );
 
       return res.json({
         message: "Data has been fetched",

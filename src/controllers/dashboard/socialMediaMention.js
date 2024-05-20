@@ -9,7 +9,7 @@ const socialMediaMention = async (req, res) => {
     const facebookAccessToken = req.cookies.facebook_access_token;
 
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    console.log("🚀 ~ socialMediaMention ~ decoded:", decoded);
+    // console.log("🚀 ~ socialMediaMention ~ decoded:", decoded);
 
     const mentionFacebook = await prisma.Filter.findMany({
       where: {

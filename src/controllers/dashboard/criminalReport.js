@@ -212,8 +212,6 @@ const criminalReport = async (req, res) => {
               {
                 params: {
                   fields: "timestamp",
-                  since: sinceUnix,
-                  until: untilUnix,
                   access_token: facebook_access_token,
                 },
               }

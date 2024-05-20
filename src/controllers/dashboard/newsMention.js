@@ -7,7 +7,7 @@ const newsMention = async (req, res) => {
     const refreshToken = req.cookies.refresh_token;
 
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    console.log("🚀 ~ socialMediaMention ~ decoded:", decoded);
+    // console.log("🚀 ~ socialMediaMention ~ decoded:", decoded);
 
     const filter = await prisma.filter.findMany({
       where: {
