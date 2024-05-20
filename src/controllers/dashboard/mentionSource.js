@@ -43,32 +43,27 @@ const mentionSource = async (req, res) => {
       });
       console.log("🚀 ~ mentionSource ~ filter:", filter);
 
-      if (filter.length === 0) {
-        return res.status(400).json({
-          error: "Bad Request",
-          message: "Please set your filter first",
-        });
-      }
-
       let allNews = [];
 
-      await Promise.all(
-        filter.map(async (item) => {
-          const news = await prisma.News.findMany({
-            where: {
-              title: {
-                contains: item.parameter,
+      if (filter.length > 0) {
+        await Promise.all(
+          filter.map(async (item) => {
+            const news = await prisma.News.findMany({
+              where: {
+                title: {
+                  contains: item.parameter,
+                },
+                published_at: {
+                  lte: toDate,
+                  gte: fromDate,
+                },
               },
-              published_at: {
-                lte: toDate,
-                gte: fromDate,
-              },
-            },
-          });
+            });
 
-          allNews = allNews.concat(news);
-        })
-      );
+            allNews = allNews.concat(news);
+          })
+        );
+      }
 
       // Source count for news per keyword
       const sourceCount = allNews.reduce((acc, news) => {
@@ -113,55 +108,50 @@ const mentionSource = async (req, res) => {
         },
       });
 
-      if (filter.length === 0) {
-        return res.status(400).json({
-          error: "Bad Request",
-          message: "Please set your filter first",
-        });
-      }
-
       let allMentions = [];
 
-      await Promise.all(
-        filter.map(async (item) => {
-          const page_token = await axios.get(
-            `https://graph.facebook.com/v19.0/${item.id}`,
-            {
-              params: {
-                fields: "name,access_token",
-                access_token: facebook_access_token,
-              },
-            }
-          );
+      if (filter.length > 0) {
+        await Promise.all(
+          filter.map(async (item) => {
+            const page_token = await axios.get(
+              `https://graph.facebook.com/v19.0/${item.id}`,
+              {
+                params: {
+                  fields: "name,access_token",
+                  access_token: facebook_access_token,
+                },
+              }
+            );
 
-          const page_name = page_token.data.name;
-          const page_access_token = page_token.data.access_token;
+            const page_name = page_token.data.name;
+            const page_access_token = page_token.data.access_token;
 
-          const posts = await axios.get(
-            `https://graph.facebook.com/v19.0/${item.id}/tagged`,
-            {
-              params: {
-                fields: `id,message,created_time`,
-                since: sinceUnix,
-                until: untilUnix,
-                access_token: page_access_token,
-              },
-            }
-          );
+            const posts = await axios.get(
+              `https://graph.facebook.com/v19.0/${item.id}/tagged`,
+              {
+                params: {
+                  fields: `id,message,created_time`,
+                  since: sinceUnix,
+                  until: untilUnix,
+                  access_token: page_access_token,
+                },
+              }
+            );
 
-          if (posts.data.data.length === 0) return [];
+            if (posts.data.data.length === 0) return [];
 
-          posts.data.data.forEach((p) => {
-            allMentions.push({
-              id: p.id,
-              message: p.message,
-              created_time: p.created_time,
-              page_name,
-              page_id: item.id, // Adding page_id from filter item
+            posts.data.data.forEach((p) => {
+              allMentions.push({
+                id: p.id,
+                message: p.message,
+                created_time: p.created_time,
+                page_name,
+                page_id: item.id, // Adding page_id from filter item
+              });
             });
-          });
-        })
-      );
+          })
+        );
+      }
 
       // Source count for Facebook per page and add the page id in response
       const sourceCount = allMentions.reduce((acc, mention) => {

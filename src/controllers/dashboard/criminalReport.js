@@ -51,42 +51,36 @@ const criminalReport = async (req, res) => {
         },
       });
 
-      if (filter.length === 0) {
-        return res.json({
-          message: "Please set filter for news platform",
-          statusCode: 200,
-          data: "No news found",
-        });
-      }
-
       let allNews = [];
 
-      await Promise.all(
-        filter.map(async (f) => {
-          const news = await prisma.News.findMany({
-            where: {
-              title: {
-                contains: f.parameter,
+      if (filter.length > 0) {
+        await Promise.all(
+          filter.map(async (f) => {
+            const news = await prisma.News.findMany({
+              where: {
+                title: {
+                  contains: f.parameter,
+                },
+                published_at: {
+                  gte: since,
+                  lte: until,
+                },
               },
-              published_at: {
-                gte: since,
-                lte: until,
-              },
-            },
-          });
+            });
 
-          // if news length 0 dont include in the array
-          if (news.length === 0) return [];
+            // if news length 0 dont include in the array
+            if (news.length === 0) return [];
 
-          news.forEach((n) => {
-            allNews.push(n);
-          });
+            news.forEach((n) => {
+              allNews.push(n);
+            });
 
-          return {
-            news,
-          };
-        })
-      );
+            return {
+              news,
+            };
+          })
+        );
+      }
 
       const countsByYear = allNews.reduce((acc, post) => {
         const date = new Date(post.published_at);
@@ -124,47 +118,41 @@ const criminalReport = async (req, res) => {
         },
       });
 
-      if (filter.length === 0) {
-        return res.json({
-          message: "No filters found",
-          statusCode: 200,
-          data: "No facebook found",
-        });
-      }
-
       let allPosts = [];
 
-      await Promise.all(
-        filter.map(async (f) => {
-          const page_token = await axios.get(
-            `https://graph.facebook.com/v19.0/${f.id}`,
-            {
-              params: {
-                fields: "access_token",
-                access_token: facebook_access_token,
-              },
-            }
-          );
+      if (filter.length > 0) {
+        await Promise.all(
+          filter.map(async (f) => {
+            const page_token = await axios.get(
+              `https://graph.facebook.com/v19.0/${f.id}`,
+              {
+                params: {
+                  fields: "access_token",
+                  access_token: facebook_access_token,
+                },
+              }
+            );
 
-          const posts = await axios.get(
-            `https://graph.facebook.com/v19.0/${f.id}/tagged`,
-            {
-              params: {
-                fields: `id, message, created_time, permalink_url`,
-                since: sinceUnix,
-                until: untilUnix,
-                access_token: page_token.data.access_token,
-              },
-            }
-          );
+            const posts = await axios.get(
+              `https://graph.facebook.com/v19.0/${f.id}/tagged`,
+              {
+                params: {
+                  fields: `id, message, created_time, permalink_url`,
+                  since: sinceUnix,
+                  until: untilUnix,
+                  access_token: page_token.data.access_token,
+                },
+              }
+            );
 
-          if (posts.data.data.length === 0) return [];
+            if (posts.data.data.length === 0) return [];
 
-          posts.data.data.forEach((p) => {
-            allPosts.push(p);
-          });
-        })
-      );
+            posts.data.data.forEach((p) => {
+              allPosts.push(p);
+            });
+          })
+        );
+      }
 
       console.log("🚀 ~ criminalReport ~ allPosts:", allPosts);
 
@@ -212,31 +200,25 @@ const criminalReport = async (req, res) => {
         },
       });
 
-      if (mentionFilter.length === 0) {
-        return res.json({
-          message: "No filters found",
-          statusCode: 200,
-          data: "No instagram found",
-        });
+      if (mentionFilter.length > 0) {
+        await Promise.all(
+          mentionFilter.map(async (f) => {
+            const posts = await axios.get(
+              `https://graph.facebook.com/v19.0/${f.id}/tags`,
+              {
+                params: {
+                  fields: "timestamp",
+                  access_token: facebook_access_token,
+                },
+              }
+            );
+
+            posts.data.data.forEach((p) => {
+              allPosts.push(p);
+            });
+          })
+        );
       }
-
-      await Promise.all(
-        mentionFilter.map(async (f) => {
-          const posts = await axios.get(
-            `https://graph.facebook.com/v19.0/${f.id}/tags`,
-            {
-              params: {
-                fields: "timestamp",
-                access_token: facebook_access_token,
-              },
-            }
-          );
-
-          posts.data.data.forEach((p) => {
-            allPosts.push(p);
-          });
-        })
-      );
 
       const hashtagFilter = await prisma.Filter.findMany({
         where: {
@@ -251,44 +233,38 @@ const criminalReport = async (req, res) => {
         },
       });
 
-      if (hashtagFilter.length === 0) {
-        return res.json({
-          message: "No filters found",
-          statusCode: 200,
-          data: "No instagram found",
-        });
+      if (hashtagFilter.length > 0) {
+        await Promise.all(
+          hashtagFilter.map(async (f) => {
+            const hashtagId = await axios.get(
+              `https://graph.facebook.com/v19.0/ig_hashtag_search`,
+              {
+                params: {
+                  user_id: mentionFilter[0].id,
+                  q: f.parameter,
+                  access_token: facebook_access_token,
+                },
+              }
+            );
+
+            const posts = await axios.get(
+              `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/top_media`,
+              {
+                params: {
+                  user_id: mentionFilter[0].id,
+                  fields: "timestamp",
+                  limit: 50,
+                  access_token: facebook_access_token,
+                },
+              }
+            );
+
+            posts.data.data.forEach((p) => {
+              allPosts.push(p);
+            });
+          })
+        );
       }
-
-      await Promise.all(
-        hashtagFilter.map(async (f) => {
-          const hashtagId = await axios.get(
-            `https://graph.facebook.com/v19.0/ig_hashtag_search`,
-            {
-              params: {
-                user_id: mentionFilter[0].id,
-                q: f.parameter,
-                access_token: facebook_access_token,
-              },
-            }
-          );
-
-          const posts = await axios.get(
-            `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/top_media`,
-            {
-              params: {
-                user_id: mentionFilter[0].id,
-                fields: "timestamp",
-                limit: 50,
-                access_token: facebook_access_token,
-              },
-            }
-          );
-
-          posts.data.data.forEach((p) => {
-            allPosts.push(p);
-          });
-        })
-      );
 
       const countsByYear = allPosts.reduce((acc, post) => {
         const date = new Date(post.timestamp);

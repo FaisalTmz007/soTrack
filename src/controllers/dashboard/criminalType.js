@@ -39,37 +39,31 @@ const criminalType = async (req, res) => {
         },
       });
 
-      if (filter.length === 0) {
-        return res.json({
-          message: "Please set filter for news platform",
-          statusCode: 200,
-          data: "No news found",
-        });
-      }
-
       let allNews = [];
 
-      await Promise.all(
-        filter.map(async (f) => {
-          const news = await prisma.News.findMany({
-            where: {
-              title: {
-                contains: f.keyword,
+      if (filter.length > 0) {
+        await Promise.all(
+          filter.map(async (f) => {
+            const news = await prisma.News.findMany({
+              where: {
+                title: {
+                  contains: f.keyword,
+                },
+                published_at: {
+                  gte: new Date(from),
+                  lte: new Date(to),
+                },
               },
-              published_at: {
-                gte: new Date(from),
-                lte: new Date(to),
-              },
-            },
-          });
+            });
 
-          if (news.length === 0) return [];
+            if (news.length === 0) return [];
 
-          news.forEach((n) => {
-            allNews.push(n);
-          });
-        })
-      );
+            news.forEach((n) => {
+              allNews.push(n);
+            });
+          })
+        );
+      }
 
       const countsByType = allNews.reduce((acc, post) => {
         if (!acc[post.crime_type]) {
@@ -110,70 +104,64 @@ const criminalType = async (req, res) => {
         },
       });
 
-      if (filter.length === 0) {
-        return res.json({
-          message: "Please set filter for Facebook platform",
-          statusCode: 200,
-          data: "No mentions found",
-        });
-      }
-
       let allMentions = [];
 
-      await Promise.all(
-        filter.map(async (f) => {
-          const page_token_response = await axios.get(
-            `https://graph.facebook.com/v19.0/${f.id}`,
-            {
-              params: {
-                fields: "access_token",
-                access_token: facebook_access_token,
-              },
-            }
-          );
+      if (filter.length > 0) {
+        await Promise.all(
+          filter.map(async (f) => {
+            const page_token_response = await axios.get(
+              `https://graph.facebook.com/v19.0/${f.id}`,
+              {
+                params: {
+                  fields: "access_token",
+                  access_token: facebook_access_token,
+                },
+              }
+            );
 
-          const page_token = page_token_response.data.access_token;
+            const page_token = page_token_response.data.access_token;
 
-          const posts_response = await axios.get(
-            `https://graph.facebook.com/v19.0/${f.id}/tagged`,
-            {
-              params: {
-                fields: `id, message, created_time, permalink_url`,
-                since: sinceUnix,
-                until: untilUnix,
-                access_token: page_token,
-              },
-            }
-          );
+            const posts_response = await axios.get(
+              `https://graph.facebook.com/v19.0/${f.id}/tagged`,
+              {
+                params: {
+                  fields: `id, message, created_time, permalink_url`,
+                  since: sinceUnix,
+                  until: untilUnix,
+                  access_token: page_token,
+                },
+              }
+            );
 
-          const posts = posts_response.data.data;
+            const posts = posts_response.data.data;
 
-          if (posts.length === 0) return [];
+            if (posts.length === 0) return [];
 
-          const translatedPosts = await Promise.all(
-            posts.map(async (p) => {
-              const caption = p.message || "no caption";
-              const translatedCaption = await translate(caption, {
-                from: "id",
-                to: "en",
-              });
+            const translatedPosts = await Promise.all(
+              posts.map(async (p) => {
+                const caption = p.message || "no caption";
+                const translatedCaption = await translate(caption, {
+                  from: "id",
+                  to: "en",
+                });
 
-              const predict = await axios.post(
-                `${process.env.FLASK_URL}/predict`,
-                {
-                  headline: translatedCaption,
-                }
-              );
+                const predict = await axios.post(
+                  `${process.env.FLASK_URL}/predict`,
+                  {
+                    headline: translatedCaption,
+                  }
+                );
 
-              p.crime_type = predict.data.prediction;
+                p.crime_type = predict.data.prediction;
 
-              return p;
-            })
-          );
+                return p;
+              })
+            );
 
-          allMentions.push(...translatedPosts);
-        })
-      );
+            allMentions.push(...translatedPosts);
+          })
+        );
+      }
 
       const countsByType = allMentions.reduce((acc, post) => {
         if (!acc[post.crime_type]) {
@@ -212,52 +200,46 @@ const criminalType = async (req, res) => {
         },
       });
 
-      if (mentionFilter.length === 0) {
-        return res.json({
-          message: "Please set filter for Instagram platform",
-          statusCode: 200,
-          data: "No mentions found",
-        });
+      if (mentionFilter.length > 0) {
+        await Promise.all(
+          mentionFilter.map(async (f) => {
+            const posts = await axios.get(
+              `https://graph.facebook.com/v19.0/${f.id}/tags`,
+              {
+                params: {
+                  fields: "caption, timestamp",
+                  access_token: facebook_access_token,
+                },
+              }
+            );
+
+            if (posts.data.data.length === 0) return [];
+
+            const translatedPosts = await Promise.all(
+              posts.data.data.map(async (p) => {
+                const caption = p.caption || "no caption";
+                const translatedCaption = await translate(caption, {
+                  from: "id",
+                  to: "en",
+                });
+
+                const predict = await axios.post(
+                  `${process.env.FLASK_URL}/predict`,
+                  {
+                    headline: translatedCaption,
+                  }
+                );
+
+                p.crime_type = predict.data.prediction;
+
+                return p;
+              })
+            );
+
+            allPosts.push(...translatedPosts);
+          })
+        );
       }
-
-      await Promise.all(
-        mentionFilter.map(async (f) => {
-          const posts = await axios.get(
-            `https://graph.facebook.com/v19.0/${f.id}/tags`,
-            {
-              params: {
-                fields: "caption, timestamp",
-                access_token: facebook_access_token,
-              },
-            }
-          );
-
-          if (posts.data.data.length === 0) return [];
-
-          const translatedPosts = await Promise.all(
-            posts.data.data.map(async (p) => {
-              const caption = p.caption || "no caption";
-              const translatedCaption = await translate(caption, {
-                from: "id",
-                to: "en",
-              });
-
-              const predict = await axios.post(
-                `${process.env.FLASK_URL}/predict`,
-                {
-                  headline: translatedCaption,
-                }
-              );
-
-              p.crime_type = predict.data.prediction;
-
-              return p;
-            })
-          );
-
-          allPosts.push(...translatedPosts);
-        })
-      );
 
       const hashtagFilter = await prisma.Filter.findMany({
         where: {
@@ -272,64 +254,58 @@ const criminalType = async (req, res) => {
         },
       });
 
-      if (hashtagFilter.length === 0) {
-        return res.json({
-          message: "Please set filter for Instagram platform",
-          statusCode: 200,
-          data: "No hashtags found",
-        });
+      if (hashtagFilter.length > 0) {
+        await Promise.all(
+          hashtagFilter.map(async (f) => {
+            const hashtagId = await axios.get(
+              `https://graph.facebook.com/v19.0/ig_hashtag_search`,
+              {
+                params: {
+                  user_id: mentionFilter[0].id,
+                  q: f.parameter,
+                  access_token: facebook_access_token,
+                },
+              }
+            );
+
+            const posts = await axios.get(
+              `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/top_media`,
+              {
+                params: {
+                  user_id: mentionFilter[0].id,
+                  fields: "timestamp",
+                  access_token: facebook_access_token,
+                },
+              }
+            );
+
+            if (posts.data.data.length === 0) return [];
+
+            const translatedPosts = await Promise.all(
+              posts.data.data.map(async (p) => {
+                const caption = p.caption || "no caption";
+                const translatedCaption = await translate(caption, {
+                  from: "id",
+                  to: "en",
+                });
+
+                const predict = await axios.post(
+                  `${process.env.FLASK_URL}/predict`,
+                  {
+                    headline: translatedCaption,
+                  }
+                );
+
+                p.crime_type = predict.data.prediction;
+
+                return p;
+              })
+            );
+
+            allPosts.push(...translatedPosts);
+          })
+        );
       }
-
-      await Promise.all(
-        hashtagFilter.map(async (f) => {
-          const hashtagId = await axios.get(
-            `https://graph.facebook.com/v19.0/ig_hashtag_search`,
-            {
-              params: {
-                user_id: mentionFilter[0].id,
-                q: f.parameter,
-                access_token: facebook_access_token,
-              },
-            }
-          );
-
-          const posts = await axios.get(
-            `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/top_media`,
-            {
-              params: {
-                user_id: mentionFilter[0].id,
-                fields: "timestamp",
-                access_token: facebook_access_token,
-              },
-            }
-          );
-
-          if (posts.data.data.length === 0) return [];
-
-          const translatedPosts = await Promise.all(
-            posts.data.data.map(async (p) => {
-              const caption = p.caption || "no caption";
-              const translatedCaption = await translate(caption, {
-                from: "id",
-                to: "en",
-              });
-
-              const predict = await axios.post(
-                `${process.env.FLASK_URL}/predict`,
-                {
-                  headline: translatedCaption,
-                }
-              );
-
-              p.crime_type = predict.data.prediction;
-
-              return p;
-            })
-          );
-
-          allPosts.push(...translatedPosts);
-        })
-      );
 
       const countsByType = allPosts.reduce((acc, post) => {
         if (!acc[post.crime_type]) {

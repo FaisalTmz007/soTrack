@@ -64,43 +64,37 @@ const mentionAnalytic = async (req, res) => {
         },
       });
 
-      if (keywordNews.length === 0) {
-        return res.json({
-          message: "Please set filter for news platform",
-          statusCode: 200,
-          data: "No news found",
-        });
-      }
-
       let allNews = [];
 
-      await Promise.all(
-        keywordNews.map(async (mf) => {
-          try {
-            const news = await prisma.News.findMany({
-              where: {
-                title: {
-                  contains: mf.keyword,
+      if (keywordNews.length > 0) {
+        await Promise.all(
+          keywordNews.map(async (mf) => {
+            try {
+              const news = await prisma.News.findMany({
+                where: {
+                  title: {
+                    contains: mf.keyword,
+                  },
+                  published_at: {
+                    gte: since,
+                    lte: until,
+                  },
                 },
-                published_at: {
-                  gte: since,
-                  lte: until,
-                },
-              },
-            });
+              });
 
-            if (news.length === 0) return [];
+              if (news.length === 0) return [];
 
-            news.forEach((n) => {
-              allNews.push(n);
-            });
+              news.forEach((n) => {
+                allNews.push(n);
+              });
 
-            return news;
-          } catch (error) {
-            return [];
-          }
-        })
-      );
+              return news;
+            } catch (error) {
+              return [];
+            }
+          })
+        );
+      }
 
       const countsByYear = allNews.reduce((acc, post) => {
         const date = new Date(post.published_at);

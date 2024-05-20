@@ -174,8 +174,6 @@ passport.use(
               },
             });
 
-            console.log(page.instagram_business_account.id, username, igExist);
-
             if (!igExist) {
               await prisma.Filter.create({
                 data: {
