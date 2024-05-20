@@ -185,6 +185,10 @@ const criminalReport = async (req, res) => {
         });
       }
 
+      // convert since into UNIX timecode
+      const sinceUnix = Math.floor(since.getTime() / 1000);
+      const untilUnix = Math.floor(until.getTime() / 1000);
+
       let allPosts = [];
 
       const mentionFilter = await prisma.Filter.findMany({
@@ -208,6 +212,8 @@ const criminalReport = async (req, res) => {
               {
                 params: {
                   fields: "timestamp",
+                  since: sinceUnix,
+                  until: untilUnix,
                   access_token: facebook_access_token,
                 },
               }
