@@ -138,7 +138,7 @@ const mentionAnalytic = async (req, res) => {
           },
         },
       });
-      console.log("🚀 ~ mentionAnalytic ~ filter:", filter);
+      // console.log("🚀 ~ mentionAnalytic ~ filter:", filter);
 
       const mentionData = await Promise.all(
         filter.map(async (pf) => {
@@ -233,7 +233,7 @@ const mentionAnalytic = async (req, res) => {
         }
       }
 
-      console.log(flattenedMentionData);
+      // console.log(flattenedMentionData);
 
       const countsByYear = flattenedMentionData.reduce((acc, post) => {
         const date = new Date(

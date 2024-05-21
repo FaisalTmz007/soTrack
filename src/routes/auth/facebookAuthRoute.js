@@ -51,7 +51,7 @@ appRouter.get(
   function (req, res) {
     // Successful authentication, redirect to success screen.
     const accessToken = req.user.accessToken;
-    console.log("🚀 ~ access_token:", accessToken);
+    // console.log("🚀 ~ access_token:", accessToken);
     res
       .cookie("facebook_access_token", accessToken, {
         httpOnly: true,
@@ -118,7 +118,7 @@ appRouter.get("/auth/facebook/signout", async (req, res) => {
     //   })
     // );
 
-    console.log("🚀 ~ user:", user);
+    // console.log("🚀 ~ user:", user);
     req.session.destroy(function (err) {
       console.log("session destroyed.");
     });

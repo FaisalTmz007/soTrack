@@ -34,8 +34,8 @@ const criminalReport = async (req, res) => {
       since = new Date(`${sinceYear}-01-01T00:00:00Z`);
     }
 
-    console.log("🚀 ~ criminalReport ~ since:", since);
-    console.log("🚀 ~ criminalReport ~ until:", until);
+    // console.log("🚀 ~ criminalReport ~ since:", since);
+    // console.log("🚀 ~ criminalReport ~ until:", until);
 
     if (platform === "news") {
       const filter = await prisma.filter.findMany({
@@ -94,7 +94,7 @@ const criminalReport = async (req, res) => {
         acc[year][month][weekNumber]++;
         return acc;
       }, {});
-      console.log("🚀 ~ countsByYear ~ countsByYear:", countsByYear);
+      // console.log("🚀 ~ countsByYear ~ countsByYear:", countsByYear);
 
       res.json({
         message: "Data has been fetched",
@@ -154,7 +154,7 @@ const criminalReport = async (req, res) => {
         );
       }
 
-      console.log("🚀 ~ criminalReport ~ allPosts:", allPosts);
+      // console.log("🚀 ~ criminalReport ~ allPosts:", allPosts);
 
       const countsByYear = allPosts.reduce((acc, post) => {
         const date = new Date(post.created_time);
@@ -224,7 +224,7 @@ const criminalReport = async (req, res) => {
         );
       }
 
-      console.log("🚀 ~ criminalReport ~ allPosts:", allPosts);
+      // console.log("🚀 ~ criminalReport ~ allPosts:", allPosts);
 
       const hashtagFilter = await prisma.Filter.findMany({
         where: {

@@ -115,9 +115,9 @@ const getNews = async (req, res) => {
       });
 
       const newsId = newsPlatform.id;
-      console.log("🚀 ~ getNews ~ newsId:", newsId);
+      // console.log("🚀 ~ getNews ~ newsId:", newsId);
       const categoryId = newsCategory.id;
-      console.log("🚀 ~ getNews ~ categoryId:", categoryId);
+      // console.log("🚀 ~ getNews ~ categoryId:", categoryId);
 
       // store to db
       data.forEach(async (news) => {

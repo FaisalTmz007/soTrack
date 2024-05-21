@@ -61,7 +61,7 @@ const mentionDetails = async (req, res) => {
           },
         }
       );
-      console.log("🚀 ~ mentionDetails ~ posts:", posts.data.data);
+      // console.log("🚀 ~ mentionDetails ~ posts:", posts.data.data);
       const updatedPost = await Promise.all(
         posts.data.data.map(async (post) => {
           const caption = post.message ? post.message : "No caption";
@@ -80,7 +80,7 @@ const mentionDetails = async (req, res) => {
           };
         })
       );
-      console.log("🚀 ~ mentionDetails ~ updatedPost:", updatedPost);
+      // console.log("🚀 ~ mentionDetails ~ updatedPost:", updatedPost);
 
       if (capitalizedTopic === "All") {
         return res.json({
@@ -92,7 +92,7 @@ const mentionDetails = async (req, res) => {
         const filteredPost = updatedPost.filter(
           (post) => post.about === capitalizedTopic
         );
-        console.log("🚀 ~ mentionDetails ~ filteredPost:", filteredPost);
+        // console.log("🚀 ~ mentionDetails ~ filteredPost:", filteredPost);
 
         return res.json({
           message: "Success",
@@ -164,7 +164,7 @@ const mentionDetails = async (req, res) => {
             };
           })
         );
-        console.log("🚀 ~ mentionDetails ~ updatedTags:", updatedTags);
+        // console.log("🚀 ~ mentionDetails ~ updatedTags:", updatedTags);
 
         if (capitalizedTopic === "All") {
           return res.json({
@@ -227,7 +227,7 @@ const mentionDetails = async (req, res) => {
           })
         );
 
-        console.log("🚀 ~ mentionDetails ~ updatedHashtags:", updatedHashtags);
+        // console.log("🚀 ~ mentionDetails ~ updatedHashtags:", updatedHashtags);
 
         if (capitalizedTopic === "All") {
           return res.json({
@@ -249,7 +249,7 @@ const mentionDetails = async (req, res) => {
 
       //   res.status(200).json(instagramTags.data.data);
     } else if (platform === "news") {
-      console.log("🚀 ~ mentionDetails ~ source:", source);
+      // console.log("🚀 ~ mentionDetails ~ source:", source);
 
       const whereClause = {
         published_at: {

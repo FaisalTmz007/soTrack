@@ -69,7 +69,7 @@ passport.use(
       profileFields: ["id", "emails", "name"],
     },
     async function (accessToken, refreshToken, profile, cb) {
-      console.log(profile.emails[0].value);
+      // console.log(profile.emails[0].value);
 
       let user = await prisma.User.findUnique({
         where: {

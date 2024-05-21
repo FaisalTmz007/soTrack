@@ -61,7 +61,7 @@ const login = async (req, res) => {
     await sendEmail(user.email, subject, otp_message);
     // await sendOTPEmail(user.email, otp);
 
-    console.log(otp_token);
+    // console.log(otp_token);
     res.header("Authorization", `Bearer ${otp_token}`);
 
     res.json({

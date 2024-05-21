@@ -77,7 +77,7 @@ async function getData(page) {
 }
 
 async function getDetail(slug) {
-  console.log(slug);
+  // console.log(slug);
   const url =
     "https://www.detik.com/jatim/hukum-dan-kriminal/" + slug + "?single=1";
   let result = {};

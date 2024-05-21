@@ -2,7 +2,7 @@ const axios = require("axios");
 
 const facebookCallback = async (req, res) => {
   const { code } = req.query;
-  console.log("🚀 ~ router.get ~ code:", code);
+  // console.log("🚀 ~ router.get ~ code:", code);
 
   try {
     // Exchange authorization code for access token
@@ -16,7 +16,7 @@ const facebookCallback = async (req, res) => {
     const { data: profile } = await axios.get(
       `https://graph.facebook.com/v19.0/me?fields=name,email&access_token=${access_token}`
     );
-    console.log("🚀 ~ appRouter.get ~ profile:", profile);
+    // console.log("🚀 ~ appRouter.get ~ profile:", profile);
 
     // Code to handle user authentication and retrieval using the profile data
 
