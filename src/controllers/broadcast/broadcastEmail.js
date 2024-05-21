@@ -33,6 +33,8 @@ const broadcastEmail = async (req, res) => {
       },
     });
 
+    console.log(files);
+
     await prisma.EmailBroadcast.create({
       data: {
         receipient: email,
