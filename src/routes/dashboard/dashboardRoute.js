@@ -50,4 +50,10 @@ appRouter.get(
   DashboardController.controllers.mentionAnalytic
 );
 
+appRouter.get(
+  "/sentimentAnalysis",
+  [authenticate],
+  DashboardController.controllers.sentimentAnalysis
+);
+
 module.exports = appRouter;

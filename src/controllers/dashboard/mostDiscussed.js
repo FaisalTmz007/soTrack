@@ -30,6 +30,13 @@ const mostDiscussed = async (req, res) => {
     if (platform.toLowerCase() === "instagram") {
       const facebook_access_token = req.cookies.facebook_access_token;
 
+      if (!facebook_access_token) {
+        return res.status(400).json({
+          error: "Unauthorized",
+          message: "Please login first",
+        });
+      }
+
       const mentionFilter = await prisma.Filter.findMany({
         where: {
           is_active: true,
@@ -114,7 +121,7 @@ const mostDiscussed = async (req, res) => {
             );
 
             const posts = await axios.get(
-              `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/top_media`,
+              `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/recent_media`,
               {
                 params: {
                   user_id: mentionFilter[0].id,
@@ -165,96 +172,6 @@ const mostDiscussed = async (req, res) => {
         statusCode: 200,
         data: countsByType,
       });
-
-      // if (!pageId || !since || !until) {
-      //   return res.status(400).json({
-      //     error: "Bad Request",
-      //     message: "Please provide pageId, since and until query parameters",
-      //   });
-      // }
-      // const page_info = await axios.get(
-      //   `https://graph.facebook.com/v19.0/${pageId}`,
-      //   {
-      //     params: {
-      //       fields: "name, access_token",
-      //       access_token: token,
-      //     },
-      //   }
-      // );
-
-      // const instagramId = await axios.get(
-      //   `https://graph.facebook.com/v19.0/${pageId}`,
-      //   {
-      //     params: {
-      //       fields: "instagram_business_account",
-      //       access_token: token,
-      //     },
-      //   }
-      // );
-
-      // facebook_page_name = page_info.data.name;
-
-      // if (!instagramId.data.instagram_business_account) {
-      //   return res.status(400).json({
-      //     error: "Unauthorized",
-      //     message: `Connect your Instagram account with this facebook page first: ${facebook_page_name}`,
-      //   });
-      // }
-
-      // const instagramBusinessId =
-      //   instagramId.data.instagram_business_account.id;
-
-      // const instagramTags = await axios.get(
-      //   `https://graph.facebook.com/v19.0/${instagramBusinessId}/tags`,
-      //   {
-      //     params: {
-      //       fields: `id,username,comments_count,like_count,caption,timestamp`,
-      //       access_token: token,
-      //     },
-      //   }
-      // );
-
-      // const instagramTagsinRange = instagramTags.data.data.filter((tag) => {
-      //   const tagTimestamp = Math.floor(
-      //     new Date(tag.timestamp).getTime() / 1000
-      //   );
-      //   return (
-      //     tagTimestamp >= convertToTimestamp(since) &&
-      //     tagTimestamp <= convertToTimestamp(until)
-      //   );
-      // });
-
-      // const updatedInstagramTagsinRange = await Promise.all(
-      //   instagramTagsinRange.map(async (tag) => {
-      //     const caption = tag.caption ? tag.caption : "No caption";
-      //     const translatedcaption = await translate(caption, {
-      //       from: "id",
-      //       to: "en",
-      //     });
-
-      //     const predict = await axios.post(`${process.env.FLASK_URL}/predict`, {
-      //       headline: translatedcaption,
-      //     });
-
-      //     // Add crime_type property to tag object
-      //     return {
-      //       ...tag,
-      //       crime_type: predict.data.prediction,
-      //     };
-      //   })
-      // );
-
-      // const countsByType = updatedInstagramTagsinRange.reduce((acc, tag) => {
-      //   const crimeType = tag.crime_type;
-      //   if (!acc[crimeType]) acc[crimeType] = 0;
-      //   acc[crimeType]++;
-      //   return acc;
-      // }, {});
-
-      // return res.status(200).json({
-      //   message: "Success",
-      //   data: countsByType,
-      // });
     } else if (platform.toLowerCase() === "facebook") {
       const facebook_access_token = req.cookies.facebook_access_token;
 

@@ -258,7 +258,7 @@ const mentionSource = async (req, res) => {
             const hashtagName = f.parameter;
 
             const posts = await axios.get(
-              `https://graph.facebook.com/v19.0/${hashtagId}/top_media`,
+              `https://graph.facebook.com/v19.0/${hashtagId}/recent_media`,
               {
                 params: {
                   user_id: mentionFilter[0].id,

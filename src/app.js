@@ -20,7 +20,6 @@ const facebookRoute = require("./routes/posts/facebook/facebookRoute");
 const instagramRoute = require("./routes/posts/instagram/instagramRoute");
 const getNews = require("./controllers/posts/news/getNews");
 const { PrismaClient } = require("@prisma/client");
-const { pl } = require("translate-google/languages");
 const prisma = new PrismaClient();
 const app = express();
 
@@ -51,7 +50,7 @@ passport.deserializeUser(function (obj, cb) {
 
 app.use(express.json());
 app.use(cors(corsOptions));
-app.use(morgan("dev"));
+app.use(morgan("combined"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());

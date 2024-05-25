@@ -15,21 +15,14 @@ from nltk.stem import PorterStemmer, WordNetLemmatizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from dotenv import load_dotenv
 
 app = Flask(__name__)
 
-# Lower casing, removing punctuation, and whitespace
 def preprocess_text(text):
-    emoji_pattern = re.compile("["
-          u"\U0001F600-\U0001F64F"  # emoticons
-          u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-          u"\U0001F680-\U0001F6FF"  # transport & map symbols
-          u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-                            "]+", flags=re.UNICODE)
-    
     # Remove emojis
-    text = emoji_pattern.sub(r'', text)
+    text = re.sub(r'[^\w\s,]', '', text)
     
     # Remove URLs
     text = re.sub(r'https?://\S+|www\.\S+', '', text)
@@ -40,29 +33,27 @@ def preprocess_text(text):
     # Convert to lowercase
     text = text.lower()
     
-    # Remove punctuations
-    punctuations = '''!()-[]{};:'"\,<>./?@#$%^&*_~'''
-    for x in text:
-        if x in punctuations:
-            text = text.replace(x, "")
+    # Tokenize text
+    tokens = word_tokenize(text)
     
     # Remove stopwords
     stop_words = set(stopwords.words('english'))
-    tokens = word_tokenize(text)
     filtered_tokens = [word for word in tokens if word not in stop_words]
-    
-    # Stemming
-    stemmer = PorterStemmer()
-    stemmed_tokens = [stemmer.stem(word) for word in filtered_tokens]
     
     # Lemmatization
     lemmatizer = WordNetLemmatizer()
-    lemmatized_tokens = [lemmatizer.lemmatize(word) for word in stemmed_tokens]
-
+    lemmatized_tokens = [lemmatizer.lemmatize(word) for word in filtered_tokens]
+    
     # Join tokens back into a single string
     text = " ".join(lemmatized_tokens)
 
     return text
+
+def categorize_sentiment(score):
+    if score > 0.5:
+        return "Positive"
+    else:
+        return "Negative"
 
 data = pd.read_csv('type_of_crime_data.csv')
 
@@ -90,10 +81,25 @@ def index():
 def predict():
     data = request.get_json()
     headline = data['headline']
-    # headline = preprocess_text(headline)
-    text = m.transform([headline]).toarray()
+    processed_text = preprocess_text(headline)
+    text = m.transform([processed_text]).toarray()
     prediction = model.predict(text)[0]
-    return jsonify({'prediction': prediction, 'headline': headline})
+    return jsonify({'prediction': prediction, 'headline': headline, 'processed_text': processed_text})
+
+@app.route('/ml/sentiment', methods=['POST'])
+def sentiment():
+    data = request.get_json()
+    headline = data['headline']
+    processed_text = preprocess_text(headline)
+    
+    sa = SentimentIntensityAnalyzer()
+    dd = sa.polarity_scores(processed_text)
+    compound = round((1 + dd['compound']) / 2, 2)
+    
+    # Categorize sentiment
+    sentiment_category = categorize_sentiment(compound)
+    
+    return jsonify({'headline': headline, 'processed_text': processed_text, 'category': sentiment_category, 'compound': compound})
 
 # Error analysis
 @app.route('/ml/error-analysis')

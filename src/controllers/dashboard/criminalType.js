@@ -269,7 +269,7 @@ const criminalType = async (req, res) => {
             );
 
             const posts = await axios.get(
-              `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/top_media`,
+              `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/recent_media`,
               {
                 params: {
                   user_id: mentionFilter[0].id,
