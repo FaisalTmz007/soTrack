@@ -89,25 +89,17 @@ def predict():
 @app.route('/ml/sentiment', methods=['POST'])
 def sentiment():
     data = request.get_json()
-    headlines = data['headlines']
+    headline = data['headline']
+    processed_text = preprocess_text(headline)
     
-    sentiments = []
-    for headline in headlines:
-        processed_text = preprocess_text(headline)
-        sa = SentimentIntensityAnalyzer()
-        dd = sa.polarity_scores(processed_text)
-        compound = round((1 + dd['compound']) / 2, 2)
-        sentiment_category = categorize_sentiment(compound)
-        
-        sentiments.append({
-            'headline': headline,
-            'processed_text': processed_text,
-            'category': sentiment_category,
-            'compound': compound
-        })
+    sa = SentimentIntensityAnalyzer()
+    dd = sa.polarity_scores(processed_text)
+    compound = round((1 + dd['compound']) / 2, 2)
     
-    return jsonify({'sentiments': sentiments})
-
+    # Categorize sentiment
+    sentiment_category = categorize_sentiment(compound)
+    
+    return jsonify({'headline': headline, 'processed_text': processed_text, 'category': sentiment_category, 'compound': compound})
 
 # Error analysis
 @app.route('/ml/error-analysis')
