@@ -160,7 +160,7 @@ const sentimentAnalysis = async (req, res) => {
       getPosts = async (filter) => {
         const items = await prisma.News.findMany({
           where: {
-            title: { contains: filter.keyword },
+            title: { contains: filter.parameter },
             published_at: { gte: new Date(from), lte: new Date(to) },
           },
         });
