@@ -21,11 +21,14 @@ const getEmailById = async (req, res) => {
         message: "You are not authorized to view this email",
       });
     }
-
+    console.log(decoded.email);
     res.json({
       message: "Email has been fetched",
       statusCode: 200,
-      data: email,
+      data: {
+        sender: decoded.email,
+        email,
+      },
     });
   } catch (error) {
     res.status(400).json({

@@ -120,6 +120,7 @@ model SocialMedia {
 model EmailBroadcast {
   id        String      @id @default(uuid())
   receipient String
+  subject    String?
   message    String @db.Text
   date       DateTime
   city       String
