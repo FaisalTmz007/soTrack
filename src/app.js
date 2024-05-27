@@ -50,7 +50,14 @@ passport.deserializeUser(function (obj, cb) {
 
 app.use(express.json());
 app.use(cors(corsOptions));
-app.use(morgan("short"));
+app.use(
+  morgan("short", {
+    skip: function (req, res) {
+      return req.url.includes(process.env.FLASK_URL);
+    },
+  })
+);
+// app.use(morgan("short"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
