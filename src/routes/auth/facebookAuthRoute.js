@@ -16,8 +16,11 @@ const isLoggedIn = (req, res, next) => {
   }
 };
 
-appRouter.get(
-  "/auth/facebook",
+appRouter.get("/auth/facebook", (req, res, next) => {
+  const { id } = req.query;
+  const state = JSON.stringify({ id });
+  console.log("🚀 ~ appRouter.get ~ state:", state);
+
   passport.authenticate("facebook", {
     scope: [
       "email",
@@ -40,25 +43,32 @@ appRouter.get(
     ],
     authType: "reauthenticate",
     authNonce: "nonce",
-  })
-);
+    state: state,
+  })(req, res, next);
+});
 
 appRouter.get(
   "/auth/facebook/callback",
-  passport.authenticate("facebook", {
-    failureRedirect: "/auth/facebook/error",
-  }),
-  function (req, res) {
-    // Successful authentication, redirect to success screen.
+  (req, res, next) => {
+    passport.authenticate("facebook", {
+      failureRedirect: "/auth/facebook/error",
+      session: false,
+    })(req, res, next);
+  },
+  (req, res) => {
+    const state = JSON.parse(req.query.state);
+    console.log("🚀 ~ state:", state);
+    const id = state.id;
+
     const accessToken = req.user.accessToken;
-    // console.log("🚀 ~ access_token:", accessToken);
     res
       .cookie("facebook_access_token", accessToken, {
         httpOnly: true,
         secure: true,
         sameSite: "none",
       })
-      .redirect(`${process.env.FRONTEND_URL}/dashboard`); // ini harusnya redirect ke dashboard
+      .redirect(`${process.env.FRONTEND_URL}/dashboard`);
+    // .send({ user_id: id });
   }
 );
 
