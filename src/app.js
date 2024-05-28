@@ -17,7 +17,6 @@ const timelineRoute = require("./routes/timeline/timelineRoute");
 const broadcastRoute = require("./routes/broadcast/broadcastRoute");
 const publicReportRoute = require("./routes/publicReport/publicReportRoute");
 const facebookRoute = require("./routes/posts/facebook/facebookRoute");
-const instagramRoute = require("./routes/posts/instagram/instagramRoute");
 const getNews = require("./controllers/posts/news/getNews");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -227,7 +226,6 @@ app.use(publicReportRoute);
 
 // sosmed route
 app.use(facebookRoute);
-app.use(instagramRoute);
 
 // broadcast route
 app.use(broadcastRoute);

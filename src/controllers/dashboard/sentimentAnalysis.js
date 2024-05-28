@@ -114,7 +114,8 @@ const sentimentAnalysis = async (req, res) => {
 
       if (!facebook_access_token) {
         return res.status(400).json({
-          message: "Please login first",
+          message:
+            "Please go to connect account before you can see social media dashboard",
         });
       }
 
@@ -229,7 +230,8 @@ const sentimentAnalysis = async (req, res) => {
 
       if (!facebook_access_token) {
         return res.status(400).json({
-          message: "Please login first",
+          message:
+            "Please go to connect account before you can see social media dashboard",
         });
       }
 

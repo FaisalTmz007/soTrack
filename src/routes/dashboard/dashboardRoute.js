@@ -16,7 +16,7 @@ appRouter.get(
 
 appRouter.get(
   "/mentionSource",
-  // [isLoggedIn],
+  [authenticate],
   DashboardController.controllers.mentionSource
 );
 

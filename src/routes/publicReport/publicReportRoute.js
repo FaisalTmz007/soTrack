@@ -2,6 +2,7 @@ const { appRouter } = require("../index");
 const {
   PublicReportController,
 } = require("../../controllers/publicReport/index");
+const authenticate = require("../../middlewares/auth/authenticate");
 const upload = require("../../middlewares/multer/multer");
 
 appRouter.get(
@@ -23,27 +24,31 @@ appRouter.get(
 
 appRouter.get(
   "/report/getAllReport",
+  [authenticate],
   PublicReportController.controllers.getAllReport
 );
 
 appRouter.get(
   "/report/getReport/:id",
+  [authenticate],
   PublicReportController.controllers.getReportById
 );
 
 appRouter.post(
   "/report/addReport/:user_id",
-  upload,
+  [upload],
   PublicReportController.controllers.addReport
 );
 
 appRouter.put(
   "/report/isHandled/:public_report_id",
+  [authenticate],
   PublicReportController.controllers.isHandled
 );
 
 appRouter.delete(
   "/report/deleteReport/:public_report_id",
+  [authenticate],
   PublicReportController.controllers.deleteReport
 );
 

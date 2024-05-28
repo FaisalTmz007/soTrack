@@ -24,7 +24,8 @@ const mentionDetails = async (req, res) => {
       if (!token) {
         return res.status(400).json({
           error: "Bad Request",
-          message: "Please provide a valid access token",
+          message:
+            "Please go to connect account before you can see social media dashboard",
         });
       }
       const { page_id } = req.query;
@@ -105,7 +106,8 @@ const mentionDetails = async (req, res) => {
       if (!token) {
         return res.status(400).json({
           error: "Bad Request",
-          message: "Please provide a valid access token",
+          message:
+            "Please go to connect account before you can see social media dashboard",
         });
       }
 

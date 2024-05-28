@@ -21,13 +21,18 @@ const verifyOtp = async (req, res) => {
     });
     // console.log(user)
     if (user.otp_code !== otp_code) {
-      return res.status(400).json({ error: "Invalid OTP" });
+      return res.status(400).json({
+        error:
+          "Oops...Sorry the code you entered is incorrect. Please try again!.",
+      });
     }
 
     const currentDate = new Date(Date.now());
     const otpExpired = new Date(user.otp_expired);
     if (currentDate > otpExpired) {
-      return res.status(400).json({ error: "OTP has expired" });
+      return res
+        .status(400)
+        .json({ error: "Oops...Sorry the code you entered is expired." });
     }
 
     // console.log(generateToken(user));
@@ -53,7 +58,7 @@ const verifyOtp = async (req, res) => {
         secure: true,
       })
       .json({
-        message: "OTP has been verified",
+        message: "Congratulations! You've successfully logged in.",
         statusCode: 200,
         data: {
           id: user.id,

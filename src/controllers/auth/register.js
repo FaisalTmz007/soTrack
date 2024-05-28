@@ -14,7 +14,7 @@ const register = async (req, res) => {
 
     if (userExist) {
       return res.status(400).json({
-        error: "Email already exist",
+        error: "Oops...Your account is already registered. Please login again.",
       });
     }
 
@@ -25,7 +25,7 @@ const register = async (req, res) => {
       },
     });
     res.json({
-      message: "User has been created",
+      message: "Congratulations you're account has been successfully created.",
       statusCode: 200,
       data: {
         id: user.id,

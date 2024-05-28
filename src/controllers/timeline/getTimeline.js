@@ -9,9 +9,17 @@ const getTimeline = async (req, res) => {
   try {
     const { platform } = req.query;
 
-    const token = req.cookies.facebook_access_token;
-
     if (platform.toLowerCase() === "instagram") {
+      const token = req.cookies.facebook_access_token;
+
+      if (!token) {
+        return res.status(400).json({
+          error: "Unauthorized",
+          message:
+            "Please go to connect account before you can see social media dashboard",
+        });
+      }
+
       const { pageId } = req.query;
 
       const { hashtag } = req.query ? req.query : null;
@@ -194,6 +202,16 @@ const getTimeline = async (req, res) => {
         });
       }
     } else if (platform.toLowerCase() === "facebook") {
+      const token = req.cookies.facebook_access_token;
+
+      if (!token) {
+        return res.status(400).json({
+          error: "Unauthorized",
+          message:
+            "Please go to connect account before you can see social media dashboard",
+        });
+      }
+
       const { pageId } = req.query;
 
       const page_info = await axios.get(

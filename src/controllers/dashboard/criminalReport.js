@@ -105,6 +105,14 @@ const criminalReport = async (req, res) => {
     } else if (platform === "facebook") {
       const facebook_access_token = req.cookies.facebook_access_token;
 
+      if (!facebook_access_token) {
+        return res.status(400).json({
+          error: "Bad Request",
+          message:
+            "Please go to connect account before you can see social media dashboard",
+        });
+      }
+
       // convert since into UNIX timecode
       const sinceUnix = Math.floor(since.getTime() / 1000);
       const untilUnix = Math.floor(until.getTime() / 1000);
@@ -180,7 +188,8 @@ const criminalReport = async (req, res) => {
       if (!facebook_access_token) {
         return res.status(400).json({
           error: "Bad Request",
-          message: "Please provide facebook_access_token",
+          message:
+            "Please go to connect account before you can see social media dashboard",
         });
       }
 

@@ -9,6 +9,14 @@ const socialMediaMention = async (req, res) => {
     const refreshToken = req.cookies.refresh_token;
     const facebookAccessToken = req.cookies.facebook_access_token;
 
+    if (!refreshToken) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message:
+          "Please go to connect account before you can see social media dashboard",
+      });
+    }
+
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
     // console.log("🚀 ~ socialMediaMention ~ decoded:", decoded);
 

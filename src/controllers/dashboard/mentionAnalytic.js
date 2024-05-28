@@ -120,7 +120,8 @@ const mentionAnalytic = async (req, res) => {
 
       if (!facebookAccessToken) {
         return res.status(400).json({
-          error: "Please login to Facebook first",
+          error:
+            "Please go to connect account before you can see social media dashboard",
         });
       }
 

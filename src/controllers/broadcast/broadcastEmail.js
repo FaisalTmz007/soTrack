@@ -48,7 +48,7 @@ const broadcastEmail = async (req, res) => {
     });
 
     res.json({
-      message: "Email has been sent",
+      message: "Congratulations you're successfully send your email broadcast.",
       statusCode: 200,
       data: {
         to: email,

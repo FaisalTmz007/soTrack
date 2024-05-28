@@ -65,7 +65,8 @@ const login = async (req, res) => {
     res.header("Authorization", `Bearer ${otp_token}`);
 
     res.json({
-      message: "OTP has been sent to your email",
+      message:
+        "Congratulations! You've successfully logged in. OTP has been sent to your email",
       statusCode: 200,
       data: {
         id: user.id,

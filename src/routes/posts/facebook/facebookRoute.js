@@ -4,19 +4,6 @@ const {
   FacebookController,
 } = require("../../../controllers/posts/facebook/index");
 
-// Route untuk profil pengguna
-appRouter.get(
-  "/facebook/profile",
-  isLoggedIn,
-  FacebookController.controllers.facebookProfile
-);
-
-appRouter.get(
-  "/facebook/user",
-  isLoggedIn,
-  FacebookController.controllers.facebookGetUser
-);
-
 appRouter.get("/facebook/page", FacebookController.controllers.facebookGetPage);
 
 module.exports = appRouter;

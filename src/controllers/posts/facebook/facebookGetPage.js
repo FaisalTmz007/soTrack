@@ -6,7 +6,15 @@ const prisma = new PrismaClient();
 const facebookGetPage = async (req, res) => {
   try {
     const token = req.cookies.facebook_access_token;
-    // console.log("🚀 ~ facebookGetPage ~ token:", token);
+
+    if (!token) {
+      return res.status(400).json({
+        error: "Unauthorized",
+        message:
+          "Please go to connect account before you can see social media dashboard",
+      });
+    }
+
     const refresh_token = req.cookies.refresh_token;
 
     const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
