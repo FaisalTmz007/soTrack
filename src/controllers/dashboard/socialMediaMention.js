@@ -36,7 +36,7 @@ const socialMediaMention = async (req, res) => {
     if (mentionFacebook.length === 0) {
       return res.json({
         message: "No filters found",
-        statusCode: 200,
+        statusCode: 400,
         data: "No social media mention found",
       });
     }

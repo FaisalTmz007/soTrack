@@ -41,11 +41,10 @@ const newsMention = async (req, res) => {
     });
 
     if (filter.length === 0) {
-      const news = await prisma.News.findMany();
       return res.json({
         message: "No filters found",
-        statusCode: 200,
-        data: news.length === 0 ? "No news found" : news.length,
+        statusCode: 400,
+        data: "No news found",
       });
     } else {
       const newsResults = await Promise.all(
