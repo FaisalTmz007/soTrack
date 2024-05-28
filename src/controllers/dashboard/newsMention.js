@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
+const getWeekNumber = require("../../utils/getWeekNumber");
 
 const newsMention = async (req, res) => {
   try {
@@ -96,13 +97,5 @@ const newsMention = async (req, res) => {
     });
   }
 };
-
-function getWeekNumber(date) {
-  const oneJan = new Date(date.getFullYear(), 0, 1);
-  const millisecondsInDay = 86400000;
-  return Math.ceil(
-    ((date - oneJan) / millisecondsInDay + oneJan.getDay() + 1) / 7
-  );
-}
 
 module.exports = newsMention;

@@ -3,8 +3,7 @@ const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const translate = require("translate-google");
 const axios = require("axios");
-
-// INI PERLU DI UBAH
+const convertToTimestamp = require("../../utils/convertToTimestamp");
 
 const criminalType = async (req, res) => {
   try {
@@ -324,11 +323,6 @@ const criminalType = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-};
-
-const convertToTimestamp = (dateString) => {
-  const [year, month, day] = dateString.split("-").map(Number);
-  return Math.floor(new Date(year, month - 1, day).getTime() / 1000); // Month is 0-indexed in JavaScript Date
 };
 
 module.exports = criminalType;

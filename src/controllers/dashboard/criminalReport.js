@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
+const getWeekNumber = require("../../utils/getWeekNumber");
 
 const criminalReport = async (req, res) => {
   try {
@@ -171,9 +172,7 @@ const criminalReport = async (req, res) => {
       res.json({
         message: "Data has been fetched",
         statusCode: 200,
-        data: {
-          countsByYear,
-        },
+        data: countsByYear,
       });
     } else if (platform === "instagram") {
       const facebook_access_token = req.cookies.facebook_access_token;
@@ -297,14 +296,5 @@ const criminalReport = async (req, res) => {
     });
   }
 };
-
-// Function to get the week number of a given date
-function getWeekNumber(date) {
-  const oneJan = new Date(date.getFullYear(), 0, 1);
-  const millisecondsInDay = 86400000;
-  return Math.ceil(
-    ((date - oneJan) / millisecondsInDay + oneJan.getDay() + 1) / 7
-  );
-}
 
 module.exports = criminalReport;

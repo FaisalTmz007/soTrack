@@ -2,6 +2,7 @@ const axios = require("axios");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
+const getWeekNumber = require("../../utils/getWeekNumber");
 
 const socialMediaMention = async (req, res) => {
   try {
@@ -126,13 +127,5 @@ const socialMediaMention = async (req, res) => {
     });
   }
 };
-
-function getWeekNumber(date) {
-  const oneJan = new Date(date.getFullYear(), 0, 1);
-  const millisecondsInDay = 86400000;
-  return Math.ceil(
-    ((date - oneJan) / millisecondsInDay + oneJan.getDay() + 1) / 7
-  );
-}
 
 module.exports = socialMediaMention;

@@ -3,8 +3,7 @@ const translate = require("translate-google");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
-
-// INI PERLU DI UBAH
+const convertToTimestamp = require("../../utils/convertToTimestamp");
 
 const mostDiscussed = async (req, res) => {
   try {
@@ -336,12 +335,6 @@ const mostDiscussed = async (req, res) => {
       message: error.message,
     });
   }
-};
-
-// Function to convert date string to Unix timestamp
-const convertToTimestamp = (dateString) => {
-  const [year, month, day] = dateString.split("-").map(Number);
-  return Math.floor(new Date(year, month - 1, day).getTime() / 1000); // Month is 0-indexed in JavaScript Date
 };
 
 module.exports = mostDiscussed;
