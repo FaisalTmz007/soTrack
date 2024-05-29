@@ -57,12 +57,16 @@ const criminalType = async (req, res) => {
 
             if (news.length === 0) return [];
 
+            console.log("panjang news", news.length);
+
             news.forEach((n) => {
               allNews.push(n);
             });
           })
         );
       }
+
+      console.log("panjang allNews", allNews.length);
 
       const countsByType = allNews.reduce((acc, post) => {
         if (!acc[post.crime_type]) {

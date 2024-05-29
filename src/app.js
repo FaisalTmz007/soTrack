@@ -76,7 +76,6 @@ passport.use(
       passReqToCallback: true,
     },
     async function (req, accessToken, refreshToken, profile, cb) {
-      // console.log(profile.emails[0].value);
       const state = JSON.parse(req.query.state);
       const user_id = state.id;
       console.log("🚀 ~ user_id:", user_id);
@@ -119,6 +118,28 @@ passport.use(
           }
         );
 
+        const fbPlatform = await prisma.Platform.findUnique({
+          where: {
+            name: "Facebook",
+          },
+        });
+
+        const igPlatform = await prisma.Platform.findUnique({
+          where: {
+            name: "Instagram",
+          },
+        });
+
+        const category = await prisma.Category.findUnique({
+          where: {
+            name: "Mention",
+          },
+        });
+
+        if (!fbPlatform || !igPlatform || !category) {
+          return cb(new Error("Platform or category not found"));
+        }
+
         // Process pages
         const pages = pageListsResponse.data.data;
 
@@ -127,9 +148,7 @@ passport.use(
             const pageExist = await prisma.Filter.findFirst({
               where: {
                 parameter: page.name,
-                Platform: {
-                  name: "Facebook",
-                },
+                platform_id: fbPlatform.id,
                 user_id: user_id,
               },
             });
@@ -139,15 +158,15 @@ passport.use(
                 data: {
                   id: page.id,
                   parameter: page.name,
-                  Platform: {
-                    name: "Facebook",
+                  platform: {
+                    connect: { id: fbPlatform.id },
                   },
-                  Category: {
-                    connect: {
-                      name: "Mention",
-                    },
+                  category: {
+                    connect: { id: category.id },
                   },
-                  user_id: user_id,
+                  user: {
+                    connect: { id: user_id },
+                  },
                 },
               });
             }
@@ -168,9 +187,8 @@ passport.use(
               const igExist = await prisma.Filter.findFirst({
                 where: {
                   parameter: username,
-                  Platform: {
-                    name: "Instagram",
-                  },
+                  platform_id: igPlatform.id,
+                  user_id: user_id,
                 },
               });
 
@@ -179,14 +197,14 @@ passport.use(
                   data: {
                     id: page.instagram_business_account.id,
                     parameter: username,
-                    Platform: {
-                      name: "Instagram",
+                    platform: {
+                      connect: { id: igPlatform.id },
                     },
-                    Category: {
-                      name: "Mention",
+                    category: {
+                      connect: { id: category.id },
                     },
-                    User: {
-                      id: user_id,
+                    user: {
+                      connect: { id: user_id },
                     },
                   },
                 });
@@ -195,11 +213,8 @@ passport.use(
           })
         );
 
-        // console.log(pages);
-
         // Attach accessToken to the user object
         user.accessToken = accessToken;
-        // console.log("🚀 ~ cihuy:", accessToken);
         return cb(null, user);
       } else if (user_id === user.id) {
         console.log("Adding new facebook user to DB..");
@@ -213,6 +228,28 @@ passport.use(
           }
         );
 
+        const fbPlatform = await prisma.Platform.findUnique({
+          where: {
+            name: "Facebook",
+          },
+        });
+
+        const igPlatform = await prisma.Platform.findUnique({
+          where: {
+            name: "Instagram",
+          },
+        });
+
+        const category = await prisma.Category.findUnique({
+          where: {
+            name: "Mention",
+          },
+        });
+
+        if (!fbPlatform || !igPlatform || !category) {
+          return cb(new Error("Platform or category not found"));
+        }
+
         // Process pages
         const pages = pageListsResponse.data.data;
 
@@ -221,9 +258,8 @@ passport.use(
             const pageExist = await prisma.Filter.findFirst({
               where: {
                 parameter: page.name,
-                Platform: {
-                  name: "Facebook",
-                },
+                platform_id: fbPlatform.id,
+                user_id: user_id,
               },
             });
 
@@ -232,14 +268,14 @@ passport.use(
                 data: {
                   id: page.id,
                   parameter: page.name,
-                  Platform: {
-                    name: "Facebook",
+                  platform: {
+                    connect: { id: fbPlatform.id },
                   },
-                  Category: {
-                    name: "Mention",
+                  category: {
+                    connect: { id: category.id },
                   },
-                  User: {
-                    id: user_id,
+                  user: {
+                    connect: { id: user_id },
                   },
                 },
               });
@@ -261,9 +297,8 @@ passport.use(
               const igExist = await prisma.Filter.findFirst({
                 where: {
                   parameter: username,
-                  Platform: {
-                    name: "Instagram",
-                  },
+                  platform_id: igPlatform.id,
+                  user_id: user_id,
                 },
               });
 
@@ -272,14 +307,14 @@ passport.use(
                   data: {
                     id: page.instagram_business_account.id,
                     parameter: username,
-                    Platform: {
-                      name: "Instagram",
+                    platform: {
+                      connect: { id: igPlatform.id },
                     },
-                    Category: {
-                      name: "Mention",
+                    category: {
+                      connect: { id: category.id },
                     },
-                    User: {
-                      id: user_id,
+                    user: {
+                      connect: { id: user_id },
                     },
                   },
                 });
@@ -288,11 +323,8 @@ passport.use(
           })
         );
 
-        // console.log(pages);
-
         // Attach accessToken to the user object
         user.accessToken = accessToken;
-        // console.log("🚀 ~ cihuy:", accessToken);
         return cb(null, user);
       } else {
         console.log("Facebook User already exists in DB..");
@@ -300,108 +332,6 @@ passport.use(
           message: "Facebook User already exists in DB.",
         });
       }
-
-      // const pageListsResponse = await axios.get(
-      //   `https://graph.facebook.com/v19.0/${profile.id}/accounts`,
-      //   {
-      //     params: {
-      //       fields: "id,name,access_token,instagram_business_account",
-      //       access_token: accessToken,
-      //     },
-      //   }
-      // );
-
-      // const fbPlatform = await prisma.Platform.findUnique({
-      //   where: {
-      //     name: "Facebook",
-      //   },
-      // });
-
-      // const igPlatform = await prisma.Platform.findUnique({
-      //   where: {
-      //     name: "Instagram",
-      //   },
-      // });
-
-      // const category = await prisma.Category.findUnique({
-      //   where: {
-      //     name: "Mention",
-      //   },
-      // });
-
-      // // Process pages
-      // const pages = pageListsResponse.data.data;
-
-      // await Promise.all(
-      //   pages.map(async (page) => {
-      //     const pageExist = await prisma.Filter.findFirst({
-      //       where: {
-      //         parameter: page.name,
-      //         platform_id: fbPlatform.id,
-      //       },
-      //     });
-
-      //     if (!pageExist) {
-      //       await prisma.Filter.create({
-      //         data: {
-      //           id: page.id,
-      //           parameter: page.name,
-      //           platform_id: fbPlatform.id,
-      //           category_id: category.id,
-      //           User: {
-      //             connect: {
-      //               id: user_id,
-      //             },
-      //           },
-      //         },
-      //       });
-      //     }
-
-      //     if (page.instagram_business_account) {
-      //       const igUsername = await axios.get(
-      //         `https://graph.facebook.com/v19.0/${page.instagram_business_account.id}`,
-      //         {
-      //           params: {
-      //             fields: "username",
-      //             access_token: page.access_token,
-      //           },
-      //         }
-      //       );
-
-      //       const username = igUsername.data.username;
-
-      //       const igExist = await prisma.Filter.findFirst({
-      //         where: {
-      //           parameter: username,
-      //           platform_id: igPlatform.id,
-      //         },
-      //       });
-
-      //       if (!igExist) {
-      //         await prisma.Filter.create({
-      //           data: {
-      //             id: page.instagram_business_account.id,
-      //             parameter: username,
-      //             platform_id: igPlatform.id,
-      //             category_id: category.id,
-      //             User: {
-      //               connect: {
-      //                 id: user_id,
-      //               },
-      //             },
-      //           },
-      //         });
-      //       }
-      //     }
-      //   })
-      // );
-
-      // // console.log(pages);
-
-      // // Attach accessToken to the user object
-      // user.accessToken = accessToken;
-      // // console.log("🚀 ~ cihuy:", accessToken);
-      // return cb(null, user);
     }
   )
 );
