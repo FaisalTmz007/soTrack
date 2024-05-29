@@ -119,24 +119,6 @@ passport.use(
           }
         );
 
-        const fbPlatform = await prisma.Platform.findUnique({
-          where: {
-            name: "Facebook",
-          },
-        });
-
-        const igPlatform = await prisma.Platform.findUnique({
-          where: {
-            name: "Instagram",
-          },
-        });
-
-        const category = await prisma.Category.findUnique({
-          where: {
-            name: "Mention",
-          },
-        });
-
         // Process pages
         const pages = pageListsResponse.data.data;
 
@@ -145,7 +127,10 @@ passport.use(
             const pageExist = await prisma.Filter.findFirst({
               where: {
                 parameter: page.name,
-                platform_id: fbPlatform.id,
+                Platform: {
+                  name: "Facebook",
+                },
+                user_id: user_id,
               },
             });
 
@@ -154,13 +139,15 @@ passport.use(
                 data: {
                   id: page.id,
                   parameter: page.name,
-                  platform_id: fbPlatform.id,
-                  category_id: category.id,
-                  User: {
+                  Platform: {
+                    name: "Facebook",
+                  },
+                  Category: {
                     connect: {
-                      id: user_id,
+                      name: "Mention",
                     },
                   },
+                  user_id: user_id,
                 },
               });
             }
@@ -181,7 +168,9 @@ passport.use(
               const igExist = await prisma.Filter.findFirst({
                 where: {
                   parameter: username,
-                  platform_id: igPlatform.id,
+                  Platform: {
+                    name: "Instagram",
+                  },
                 },
               });
 
@@ -190,12 +179,14 @@ passport.use(
                   data: {
                     id: page.instagram_business_account.id,
                     parameter: username,
-                    platform_id: igPlatform.id,
-                    category_id: category.id,
+                    Platform: {
+                      name: "Instagram",
+                    },
+                    Category: {
+                      name: "Mention",
+                    },
                     User: {
-                      connect: {
-                        id: user_id,
-                      },
+                      id: user_id,
                     },
                   },
                 });
@@ -222,24 +213,6 @@ passport.use(
           }
         );
 
-        const fbPlatform = await prisma.Platform.findUnique({
-          where: {
-            name: "Facebook",
-          },
-        });
-
-        const igPlatform = await prisma.Platform.findUnique({
-          where: {
-            name: "Instagram",
-          },
-        });
-
-        const category = await prisma.Category.findUnique({
-          where: {
-            name: "Mention",
-          },
-        });
-
         // Process pages
         const pages = pageListsResponse.data.data;
 
@@ -248,7 +221,9 @@ passport.use(
             const pageExist = await prisma.Filter.findFirst({
               where: {
                 parameter: page.name,
-                platform_id: fbPlatform.id,
+                Platform: {
+                  name: "Facebook",
+                },
               },
             });
 
@@ -257,12 +232,14 @@ passport.use(
                 data: {
                   id: page.id,
                   parameter: page.name,
-                  platform_id: fbPlatform.id,
-                  category_id: category.id,
+                  Platform: {
+                    name: "Facebook",
+                  },
+                  Category: {
+                    name: "Mention",
+                  },
                   User: {
-                    connect: {
-                      id: user_id,
-                    },
+                    id: user_id,
                   },
                 },
               });
@@ -284,7 +261,9 @@ passport.use(
               const igExist = await prisma.Filter.findFirst({
                 where: {
                   parameter: username,
-                  platform_id: igPlatform.id,
+                  Platform: {
+                    name: "Instagram",
+                  },
                 },
               });
 
@@ -293,12 +272,14 @@ passport.use(
                   data: {
                     id: page.instagram_business_account.id,
                     parameter: username,
-                    platform_id: igPlatform.id,
-                    category_id: category.id,
+                    Platform: {
+                      name: "Instagram",
+                    },
+                    Category: {
+                      name: "Mention",
+                    },
                     User: {
-                      connect: {
-                        id: user_id,
-                      },
+                      id: user_id,
                     },
                   },
                 });
