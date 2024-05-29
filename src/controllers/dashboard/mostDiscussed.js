@@ -294,7 +294,7 @@ const mostDiscussed = async (req, res) => {
             const news = await prisma.News.findMany({
               where: {
                 title: {
-                  contains: f.keyword,
+                  contains: f.parameter,
                 },
                 published_at: {
                   gte: new Date(since),
