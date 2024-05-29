@@ -75,7 +75,7 @@ passport.use(
       profileFields: ["id", "emails", "name"],
       passReqToCallback: true,
     },
-    async function (req, accessToken, refreshToken, profile, cb) {
+    async function (req, res, accessToken, refreshToken, profile, cb) {
       // console.log(profile.emails[0].value);
       const state = JSON.parse(req.query.state);
       const user_id = state.id;
