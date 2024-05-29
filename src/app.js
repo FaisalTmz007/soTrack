@@ -158,15 +158,9 @@ passport.use(
                 data: {
                   id: page.id,
                   parameter: page.name,
-                  platform: {
-                    connect: { id: fbPlatform.id },
-                  },
-                  category: {
-                    connect: { id: category.id },
-                  },
-                  user: {
-                    connect: { id: user_id },
-                  },
+                  platform_id: fbPlatform.id,
+                  category_id: category.id,
+                  user_id: user_id,
                 },
               });
             }
@@ -197,15 +191,9 @@ passport.use(
                   data: {
                     id: page.instagram_business_account.id,
                     parameter: username,
-                    platform: {
-                      connect: { id: igPlatform.id },
-                    },
-                    category: {
-                      connect: { id: category.id },
-                    },
-                    user: {
-                      connect: { id: user_id },
-                    },
+                    platform_id: fbPlatform.id,
+                    category_id: category.id,
+                    user_id: user_id,
                   },
                 });
               }
@@ -268,15 +256,9 @@ passport.use(
                 data: {
                   id: page.id,
                   parameter: page.name,
-                  platform: {
-                    connect: { id: fbPlatform.id },
-                  },
-                  category: {
-                    connect: { id: category.id },
-                  },
-                  user: {
-                    connect: { id: user_id },
-                  },
+                  platform_id: fbPlatform.id,
+                  category_id: category.id,
+                  user_id: user_id,
                 },
               });
             }
@@ -307,15 +289,9 @@ passport.use(
                   data: {
                     id: page.instagram_business_account.id,
                     parameter: username,
-                    platform: {
-                      connect: { id: igPlatform.id },
-                    },
-                    category: {
-                      connect: { id: category.id },
-                    },
-                    user: {
-                      connect: { id: user_id },
-                    },
+                    platform_id: fbPlatform.id,
+                    category_id: category.id,
+                    user_id: user_id,
                   },
                 });
               }
