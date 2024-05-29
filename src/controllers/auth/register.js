@@ -4,12 +4,11 @@ const prisma = new PrismaClient();
 
 const register = async (req, res) => {
   const { email, password } = req.body;
-  const hashedPassword = hashPassword(password);
+
   try {
+    // Check if the user already exists
     const userExist = await prisma.user.findFirst({
-      where: {
-        email,
-      },
+      where: { email },
     });
 
     if (userExist) {
@@ -18,25 +17,35 @@ const register = async (req, res) => {
       });
     }
 
+    // Asynchronously hash the password
+    const hashedPassword = await hashPassword(password);
+
+    // Create a new user
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
       },
     });
-    res.json({
-      message: "Congratulations you're account has been successfully created.",
-      statusCode: 200,
+
+    res.status(201).json({
+      message: "Congratulations! Your account has been successfully created.",
+      statusCode: 201,
       data: {
         id: user.id,
         email: user.email,
       },
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
+    console.error("Error registering user:", error); // Log the error for debugging
+    res.status(500).json({
+      error: "An error has occurred",
       message: error.message,
     });
+  } finally {
+    // Ensure the Prisma client is properly closed
+    await prisma.$disconnect();
   }
 };
+
 module.exports = register;

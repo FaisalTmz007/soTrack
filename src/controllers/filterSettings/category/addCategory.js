@@ -8,35 +8,38 @@ const addCategory = async (req, res) => {
   const categoryName = capitalize(name);
 
   try {
-    const category = await prisma.Category.findUnique({
+    const existingCategory = await prisma.category.findUnique({
       where: {
         name: categoryName,
       },
     });
 
-    if (category) {
+    if (existingCategory) {
       return res.status(400).json({
         error: "Category already exists",
         message: "Category already exists",
       });
     }
 
-    const categoryCreate = await prisma.Category.create({
+    const newCategory = await prisma.category.create({
       data: {
         name: categoryName,
       },
     });
 
-    res.json({
+    res.status(201).json({
       message: "Category has been added",
-      statusCode: 200,
-      data: categoryCreate,
+      statusCode: 201,
+      data: newCategory,
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
+    console.error("Error adding category:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
       message: error.message,
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

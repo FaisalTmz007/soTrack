@@ -7,35 +7,41 @@ const addPlatform = async (req, res) => {
   const { name, logo_url } = req.body;
 
   try {
+    // Capitalize the platform name
     const platformName = capitalize(name);
-    const platform = await prisma.Platform.findUnique({
+
+    // Check if platform already exists
+    const existingPlatform = await prisma.Platform.findUnique({
       where: {
         name: platformName,
       },
     });
 
-    if (platform) {
+    if (existingPlatform) {
       return res.status(400).json({
         error: "Platform already exists",
         message: "Platform already exists",
       });
     }
 
-    const platformCreate = await prisma.Platform.create({
+    // Create new platform
+    const newPlatform = await prisma.Platform.create({
       data: {
         name: platformName,
         logo_url,
       },
     });
 
-    res.json({
+    // Return success response
+    res.status(200).json({
       message: "Platform has been added",
       statusCode: 200,
-      data: platformCreate,
+      data: newPlatform,
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
+    // Handle errors
+    res.status(500).json({
+      error: "Internal Server Error",
       message: error.message,
     });
   }

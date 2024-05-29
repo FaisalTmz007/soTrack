@@ -5,11 +5,18 @@ const prisma = new PrismaClient();
 const deleteCategory = async (req, res) => {
   const { id } = req.params;
   try {
-    const category = await prisma.Category.delete({
+    const category = await prisma.category.delete({
       where: {
         id,
       },
     });
+
+    if (!category) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Category not found",
+      });
+    }
 
     res.json({
       message: "Category has been deleted",
@@ -17,10 +24,13 @@ const deleteCategory = async (req, res) => {
       data: category,
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
+    console.error("Error deleting category:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
       message: error.message,
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

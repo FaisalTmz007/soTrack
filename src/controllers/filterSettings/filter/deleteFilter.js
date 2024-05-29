@@ -1,27 +1,78 @@
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
+
 const prisma = new PrismaClient();
 
 const deleteFilter = async (req, res) => {
   const { id } = req.params;
+  const refreshToken = req.cookies.refresh_token;
 
   try {
-    const filterDelete = await prisma.Filter.delete({
+    // Check if refresh token is present
+    if (!refreshToken) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Refresh token missing",
+      });
+    }
+
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    // Find filter by ID and user ID
+    const filter = await prisma.filter.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        userId: true,
+      },
+    });
+
+    // Check if filter exists
+    if (!filter) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Filter not found",
+      });
+    }
+
+    // Check if user is authorized to delete the filter
+    if (filter.userId !== decoded.id) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "You are not authorized to delete this filter",
+      });
+    }
+
+    // Perform deletion
+    const filterDelete = await prisma.filter.delete({
       where: {
         id,
       },
     });
 
-    res.json({
+    // Check if deletion was successful
+    if (!filterDelete) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Filter not found",
+      });
+    }
+
+    res.status(200).json({
       message: "Filter has been deleted",
       statusCode: 200,
       data: filterDelete,
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
-      message: error.message,
+    console.error("Error deleting filter:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "An error occurred while deleting the filter",
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

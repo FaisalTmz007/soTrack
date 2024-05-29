@@ -1,54 +1,68 @@
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../../services/emailService");
+require("dotenv").config();
+
+const prisma = new PrismaClient();
 
 const broadcastEmail = async (req, res) => {
   try {
     const { email, subject, date, city, message } = req.body;
     const files = req.files;
-    const refresh_token = req.cookies.refresh_token;
+    const refreshToken = req.cookies.refresh_token;
 
-    if (!refresh_token) {
+    // Validate input data
+    if (!refreshToken) {
       return res.status(400).json({
         error: "Bad Request",
         message: "Please provide a valid refresh token",
       });
     }
 
-    const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
+    if (!email || !subject || !date || !city || !message) {
+      return res.status(400).json({
+        error: "Bad Request",
+        message: "Missing required fields",
+      });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
     const fullMessage = `
-  <p>Tanggal: ${date}</p>
-  <p>Kota: ${city}</p>
-  <br>
-  <p>${message}</p>
-`;
+      <p>Tanggal: ${date}</p>
+      <p>Kota: ${city}</p>
+      <br>
+      <p>${message}</p>
+    `;
 
+    // Send the email
     await sendEmail(email, subject, fullMessage, files);
 
     const user = await prisma.user.findUnique({
-      where: {
-        id: decoded.id,
-      },
+      where: { id: decoded.id },
     });
 
-    // change file filename into url
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
 
-    await prisma.EmailBroadcast.create({
+    // Save email broadcast to the database
+    await prisma.emailBroadcast.create({
       data: {
         receipient: email,
-        subject: subject,
-        message: message,
+        subject,
+        message,
         date: new Date(date),
-        city: city,
+        city,
         user_id: user.id,
         attachments: files.map((file) => file.filename).join(","),
       },
     });
 
     res.json({
-      message: "Congratulations you're successfully send your email broadcast.",
+      message: "Congratulations, your email broadcast was successfully sent.",
       statusCode: 200,
       data: {
         to: email,
@@ -58,10 +72,13 @@ const broadcastEmail = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
+    console.error("Error during broadcast email:", error); // Log the error for debugging
+    res.status(500).json({
+      error: "An error has occurred",
       message: error.message,
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

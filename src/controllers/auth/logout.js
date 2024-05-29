@@ -1,12 +1,12 @@
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
-const prisma = new PrismaClient();
-
 require("dotenv").config();
+
+const prisma = new PrismaClient();
 
 const logout = async (req, res) => {
   try {
-    // refresh token from cookies
+    // Retrieve refresh token from cookies
     const refreshToken = req.cookies.refresh_token;
 
     if (!refreshToken) {
@@ -18,15 +18,18 @@ const logout = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    userToken = await prisma.UserToken.findFirst({
+    const userToken = await prisma.userToken.findFirst({
       where: {
         user_id: decodedRefreshToken.id,
       },
     });
-    console.log("usertoken: " + userToken);
 
-    // delete refresh token from database
-    await prisma.UserToken.delete({
+    if (!userToken) {
+      return res.status(404).json({ error: "Token not found" });
+    }
+
+    // Delete refresh token from database
+    await prisma.userToken.delete({
       where: {
         id: userToken.id,
       },
@@ -37,10 +40,13 @@ const logout = async (req, res) => {
       statusCode: 200,
     });
   } catch (error) {
-    res.status(401).json({
-      error: "An error has occured",
+    console.error("Error during logout:", error); // Log the error for debugging
+    res.status(500).json({
+      error: "An error has occurred",
       message: error.message,
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

@@ -4,7 +4,6 @@ const hashPassword = require("../../utils/hashPassword");
 require("dotenv").config();
 const prisma = new PrismaClient();
 
-// reset password with get token from params
 const resetPassword = async (req, res) => {
   try {
     const reset = req.query.reset;
@@ -14,9 +13,7 @@ const resetPassword = async (req, res) => {
     }
 
     const user = await prisma.user.findFirst({
-      where: {
-        reset_password: reset,
-      },
+      where: { reset_password: reset },
     });
 
     if (!user) {
@@ -29,12 +26,10 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ error: "Password is required" });
     }
 
-    const hashedPassword = hashPassword(password);
+    const hashedPassword = await hashPassword(password); // Ensure this is asynchronous
 
     await prisma.user.update({
-      where: {
-        id: user.id,
-      },
+      where: { id: user.id },
       data: {
         password: hashedPassword,
         reset_password: null,
@@ -43,7 +38,7 @@ const resetPassword = async (req, res) => {
 
     res.json({
       message:
-        "Congratulations you're new password has been successfully created.",
+        "Congratulations, your new password has been successfully created.",
       statusCode: 200,
       data: {
         id: user.id,
@@ -52,10 +47,13 @@ const resetPassword = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
+    console.error("Error resetting password:", error); // Log the error for debugging
+    res.status(500).json({
+      error: "An error has occurred",
       message: error.message,
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

@@ -3,47 +3,44 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../../services/emailService");
 const { generateOTP, otpExpired } = require("../../utils/generateOTP");
 const prisma = new PrismaClient();
+require("dotenv").config();
 
 const refreshOtp = async (req, res) => {
   const otpHeader = req.headers["authorization"];
 
   try {
+    // Ensure OTP token is present
     const token = otpHeader && otpHeader.split(" ")[1];
-    if (token == null) return res.sendStatus(401);
-    // console.log("ini token: " + token);
+    if (!token) {
+      return res.status(401).json({ error: "Authorization token is missing" });
+    }
 
-    const token_decoded = jwt.verify(token, process.env.GENERATE_OTP_SECRET);
+    // Verify OTP token
+    const tokenDecoded = jwt.verify(token, process.env.GENERATE_OTP_SECRET);
     const user = await prisma.user.findFirst({
-      where: {
-        id: token_decoded.id,
-      },
+      where: { id: tokenDecoded.id },
     });
 
     if (!user) {
-      return res.status(400).json({ error: "Invalid OTP" });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    const otp = await generateOTP();
-    const otp_expired = await otpExpired();
+    // Generate new OTP and expiry
+    const otp = generateOTP();
+    const otp_expired = otpExpired();
 
-    const newOtp = await prisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        otp_code: otp,
-        otp_expired: otp_expired,
-      },
+    // Update user OTP in database
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { otp_code: otp, otp_expired },
     });
 
-    const otp_message = `Your OTP code is <b>${otp}</b>.`;
-
+    // Prepare OTP message and subject
+    const otpMessage = `Your OTP code is <b>${otp}</b>.`;
     const subject = "OTP Verification";
 
-    // send otp to email
-    await sendEmail(user.email, subject, otp_message);
-
-    // await sendOTPEmail(user.email, otp);
+    // Send OTP to user's email
+    await sendEmail(user.email, subject, otpMessage);
 
     res.json({
       message: "OTP has been refreshed",
@@ -52,14 +49,17 @@ const refreshOtp = async (req, res) => {
         id: user.id,
         email: user.email,
         otp_code: otp,
-        otp_expired: otp_expired,
+        otp_expired,
       },
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
+    console.error("Error refreshing OTP:", error); // Log the error for debugging
+    res.status(500).json({
+      error: "An error has occurred",
       message: error.message,
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

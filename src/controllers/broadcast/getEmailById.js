@@ -1,27 +1,42 @@
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
+
 const prisma = new PrismaClient();
 
 const getEmailById = async (req, res) => {
   const { id } = req.params;
-  const refresh_token = req.cookies.refresh_token;
+  const refreshToken = req.cookies.refresh_token;
 
   try {
-    const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
+    if (!refreshToken) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Refresh token missing",
+      });
+    }
 
-    const email = await prisma.EmailBroadcast.findUnique({
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    const email = await prisma.emailBroadcast.findUnique({
       where: {
-        id: id,
+        id,
       },
     });
 
+    if (!email) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Email not found",
+      });
+    }
+
     if (email.user_id !== decoded.id) {
-      return res.status(401).json({
-        error: "Unauthorized",
+      return res.status(403).json({
+        error: "Forbidden",
         message: "You are not authorized to view this email",
       });
     }
-    console.log(decoded.email);
+
     res.json({
       message: "Email has been fetched",
       statusCode: 200,
@@ -31,10 +46,12 @@ const getEmailById = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
+    res.status(500).json({
+      error: "Internal Server Error",
       message: error.message,
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

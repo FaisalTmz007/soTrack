@@ -7,17 +7,10 @@ const isHandled = async (req, res) => {
     const refresh_token = req.cookies.refresh_token;
     const { public_report_id } = req.params;
 
-    if (!refresh_token) {
+    if (!refresh_token || !public_report_id) {
       return res.status(400).json({
         error: "Bad Request",
-        message: "Please provide a valid refresh token",
-      });
-    }
-
-    if (!public_report_id) {
-      return res.status(400).json({
-        error: "Bad Request",
-        message: "Please provide a valid public report id",
+        message: "Please provide a valid refresh token and public report ID",
       });
     }
 
@@ -29,15 +22,15 @@ const isHandled = async (req, res) => {
       },
     });
 
-    const publicReport = await prisma.publicReport.findFirst({
+    const publicReport = await prisma.publicReport.findUnique({
       where: {
         id: public_report_id,
       },
     });
 
     if (!publicReport) {
-      return res.status(400).json({
-        error: "Bad Request",
+      return res.status(404).json({
+        error: "Not Found",
         message: "Public report not found",
       });
     }
@@ -49,39 +42,27 @@ const isHandled = async (req, res) => {
       });
     }
 
-    if (publicReport.is_handled) {
-      await prisma.publicReport.update({
-        where: {
-          id: public_report_id,
-        },
-        data: {
-          is_handled: false,
-        },
-      });
+    // Toggle the is_handled status
+    const updatedReport = await prisma.publicReport.update({
+      where: {
+        id: public_report_id,
+      },
+      data: {
+        is_handled: !publicReport.is_handled,
+      },
+    });
 
-      return res.json({
-        message: "Public report is unhandled",
-        statusCode: 200,
-      });
-    } else {
-      await prisma.publicReport.update({
-        where: {
-          id: public_report_id,
-        },
-        data: {
-          is_handled: true,
-        },
-      });
-
-      return res.json({
-        message: "Public report is handled",
-        statusCode: 200,
-      });
-    }
+    res.json({
+      message: `Public report is ${
+        updatedReport.is_handled ? "handled" : "unhandled"
+      }`,
+      statusCode: 200,
+    });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
-      message: error.message,
+    console.error("Error handling report:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "An error occurred while handling the report",
     });
   }
 };

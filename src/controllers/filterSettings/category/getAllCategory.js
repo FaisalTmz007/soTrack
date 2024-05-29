@@ -4,18 +4,21 @@ const prisma = new PrismaClient();
 
 const getAllCategory = async (req, res) => {
   try {
-    const categories = await prisma.Category.findMany();
+    const categories = await prisma.category.findMany();
 
-    res.json({
+    return res.status(200).json({
       message: "All categories",
       statusCode: 200,
       data: categories,
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
-      message: error.message,
+    console.error("Error fetching categories:", error);
+    return res.status(500).json({
+      error: "Internal Server Error",
+      message: "An error occurred while fetching categories",
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

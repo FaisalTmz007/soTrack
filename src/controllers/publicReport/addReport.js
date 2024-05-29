@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
+
 const prisma = new PrismaClient();
 
 const addReport = async (req, res) => {
@@ -8,6 +9,7 @@ const addReport = async (req, res) => {
       req.body;
     const files = req.files;
 
+    // Check if all required fields are provided
     if (!name || !email || !phone || !province || !city || !message) {
       return res.status(400).json({
         error: "Bad Request",
@@ -15,6 +17,7 @@ const addReport = async (req, res) => {
       });
     }
 
+    // Create the report
     const report = await prisma.PublicReport.create({
       data: {
         name,
@@ -31,15 +34,17 @@ const addReport = async (req, res) => {
       },
     });
 
-    res.json({
-      message: "Report has been added",
-      statusCode: 200,
+    // Return success response with the created report
+    res.status(201).json({
+      message: "Report has been added successfully",
       data: report,
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
-      message: error.message,
+    // Handle errors
+    console.error("Error adding report:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "An error occurred while adding the report",
     });
   }
 };

@@ -1,24 +1,22 @@
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 
-const getAllReport = async (req, res) => {
-  try {
-    const refresh_token = req.cookies.refresh_token;
+const prisma = new PrismaClient();
 
-    if (!refresh_token) {
+const getAllReports = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refresh_token;
+
+    if (!refreshToken) {
       return res.status(400).json({
         error: "Bad Request",
         message: "Please provide a valid refresh token",
       });
     }
 
-    const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
-
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
     const user = await prisma.user.findUnique({
-      where: {
-        id: decoded.id,
-      },
+      where: { id: decoded.id },
     });
 
     const {
@@ -29,55 +27,33 @@ const getAllReport = async (req, res) => {
       page = 1,
       limit = 10,
     } = req.query;
-
     const skip = (page - 1) * limit;
+    const where = {
+      user_id: user.id,
+      createdAt: { gte: new Date(since), lte: new Date(until) },
+      ...(q && { message: { contains: q } }),
+    };
 
-    if (q) {
-      const reports = await prisma.publicReport.findMany({
-        where: {
-          user_id: user.id,
-          message: {
-            contains: q,
-          },
-          createdAt: {
-            gte: new Date(since),
-            lte: new Date(until),
-          },
-        },
-        skip: parseInt(skip),
-        take: parseInt(limit),
-      });
+    const reports = await prisma.publicReport.findMany({
+      where,
+      skip: parseInt(skip),
+      take: parseInt(limit),
+    });
 
-      return res.json({
-        message: `All reports containing ${q}`,
-        statusCode: 200,
-        data: reports,
-      });
-    } else {
-      const reports = await prisma.publicReport.findMany({
-        where: {
-          user_id: user.id,
-          createdAt: {
-            gte: new Date(since),
-            lte: new Date(until),
-          },
-        },
-        skip: parseInt(skip),
-        take: parseInt(limit),
-      });
+    const message = q ? `All reports containing "${q}"` : "All reports";
 
-      return res.json({
-        message: "All reports",
-        statusCode: 200,
-        data: reports,
-      });
-    }
+    res.json({
+      message,
+      statusCode: 200,
+      data: reports,
+    });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
-      message: error.message,
+    console.error("Error fetching reports:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "An error occurred while fetching reports",
     });
   }
 };
 
-module.exports = getAllReport;
+module.exports = getAllReports;

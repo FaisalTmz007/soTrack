@@ -1,6 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
-const capitalize = require("../../../utils/capitalize");
 
 const prisma = new PrismaClient();
 
@@ -9,14 +8,21 @@ const addFilter = async (req, res) => {
   const access_token = req.headers["authorization"];
 
   try {
-    const token = access_token && access_token.split(" ")[1];
-    if (token == null) return res.sendStatus(401);
+    // Validate access token
+    if (!access_token) {
+      return res.status(401).json({ error: "Access token missing" });
+    }
+
+    const token = access_token.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ error: "Invalid access token format" });
+    }
 
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const user_id = decoded.id;
-    // console.log(user_id);
 
-    const filterExist = await prisma.Filter.findFirst({
+    // Check if filter already exists for the user, platform, and parameter
+    const existingFilter = await prisma.filter.findFirst({
       where: {
         parameter,
         user_id,
@@ -24,11 +30,12 @@ const addFilter = async (req, res) => {
       },
     });
 
-    if (filterExist) {
-      return res.status(400).json({ error: "Filter already exist" });
+    if (existingFilter) {
+      return res.status(400).json({ error: "Filter already exists" });
     }
 
-    const filter = await prisma.Filter.create({
+    // Create the filter
+    const newFilter = await prisma.filter.create({
       data: {
         parameter,
         user_id,
@@ -37,16 +44,19 @@ const addFilter = async (req, res) => {
       },
     });
 
-    res.json({
+    res.status(200).json({
       message: "Filter has been added",
       statusCode: 200,
-      data: filter,
+      data: newFilter,
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
-      message: error.message,
+    console.error("Error adding filter:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "An error occurred while adding the filter",
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

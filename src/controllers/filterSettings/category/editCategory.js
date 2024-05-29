@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const capitalize = require("../../../utils/capitalize");
+
 const prisma = new PrismaClient();
 
 const editCategory = async (req, res) => {
@@ -7,7 +8,20 @@ const editCategory = async (req, res) => {
   const { name } = req.body;
 
   try {
-    const categoryUpdate = await prisma.Category.update({
+    const existingCategory = await prisma.category.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!existingCategory) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Category not found",
+      });
+    }
+
+    const updatedCategory = await prisma.category.update({
       where: {
         id,
       },
@@ -19,13 +33,16 @@ const editCategory = async (req, res) => {
     res.json({
       message: "Category has been updated",
       statusCode: 200,
-      data: categoryUpdate,
+      data: updatedCategory,
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
+    console.error("Error updating category:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
       message: error.message,
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

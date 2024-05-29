@@ -1,11 +1,7 @@
 const { appRouter } = require("../index");
-// const {
-//   FacebookAuthController,
-// } = require("../../controllers/auth/facebook/index");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const passport = require("passport");
-const axios = require("axios");
 
 //middleware
 const isLoggedIn = (req, res, next) => {
@@ -19,7 +15,6 @@ const isLoggedIn = (req, res, next) => {
 appRouter.get("/auth/facebook", (req, res, next) => {
   const { id } = req.query;
   const state = JSON.stringify({ id });
-  console.log("🚀 ~ appRouter.get ~ state:", state);
 
   passport.authenticate("facebook", {
     scope: [
@@ -57,7 +52,6 @@ appRouter.get(
   },
   (req, res) => {
     const state = JSON.parse(req.query.state);
-    console.log("🚀 ~ state:", state);
     const id = state.id;
 
     const accessToken = req.user.accessToken;
@@ -96,39 +90,6 @@ appRouter.get("/auth/facebook/signout", async (req, res) => {
       },
     });
 
-    // const page_list = await axios.get(
-    //   `https://graph.facebook.com/v11.0/me/accounts`,
-    //   {
-    //     params: {
-    //       fields: "id,name,access_token,instagram_business_account",
-    //       access_token: user.accessToken,
-    //     },
-    //   }
-    // );
-
-    // const pages = page_list.data.data;
-    // console.log("🚀 ~ appRouter.get ~ pages:", pages);
-
-    // await Promise.all(
-    //   pages.map(async (page) => {
-    //     const igUsername = await axios.get(
-    //       `https://graph.facebook.com/v11.0/${page.instagram_business_account.id}`,
-    //       {
-    //         params: {
-    //           fields: "username",
-    //           access_token: user.accessToken,
-    //         },
-    //       }
-    //     );
-    //     await prisma.filter.delete({
-    //       where: {
-    //         OR: [{ name: page.name }, { name: igUsername.data.username }],
-    //       },
-    //     });
-    //   })
-    // );
-
-    // console.log("🚀 ~ user:", user);
     req.session.destroy(function (err) {
       console.log("session destroyed.");
     });
@@ -140,25 +101,5 @@ appRouter.get("/auth/facebook/signout", async (req, res) => {
     res.status(400).send({ message: err.message });
   }
 });
-
-// appRouter.get(
-//   "/auth/facebook",
-//   FacebookAuthController.controllers.facebookAuth
-// );
-
-// appRouter.get(
-//   "/auth/facebook/callback",
-//   FacebookAuthController.controllers.facebookCallback
-// );
-
-// appRouter.get(
-//   "/auth/failed",
-//   FacebookAuthController.controllers.facebookAuthFailed
-// );
-
-// appRouter.get(
-//   "/facebook/logout",
-//   FacebookAuthController.controllers.facebookLogout
-// );
 
 module.exports = appRouter;

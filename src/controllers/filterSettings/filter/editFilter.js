@@ -1,57 +1,76 @@
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
-const capitalize = require("../../../utils/capitalize");
+
 const prisma = new PrismaClient();
 
 const editFilter = async (req, res) => {
   const { id } = req.params;
   const { parameter, is_active } = req.body;
-  const access_token = req.headers["authorization"];
+  const accessToken = req.headers["authorization"];
 
   try {
-    const token = access_token && access_token.split(" ")[1];
-    if (!token) return res.sendStatus(401);
+    // Check if access token is present
+    if (!accessToken) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized", message: "Access token missing" });
+    }
 
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    // Verify access token
+    const decoded = jwt.verify(
+      accessToken.split(" ")[1],
+      process.env.ACCESS_TOKEN_SECRET
+    );
 
-    const filter = await prisma.Filter.findFirst({
+    // Find filter by ID and user ID
+    const filter = await prisma.filter.findFirst({
       where: {
         id,
-        user_id: decoded.id,
+        userId: decoded.id,
       },
     });
 
-    if (!filter || filter.user_id !== decoded.id) {
-      return res.status(403).json({ error: "Access denied" });
+    // Check if filter exists and user is authorized
+    if (!filter) {
+      return res.status(403).json({
+        error: "Access denied",
+        message: "Filter not found or unauthorized",
+      });
     }
 
-    let updateData = {};
+    // Prepare update data
+    const updateData = {};
     if (parameter) {
-      updateData.parameter = capitalize(parameter);
+      updateData.parameter = parameter;
     }
     if (is_active !== undefined) {
       updateData.is_active = is_active;
     }
 
+    // Check if valid fields are provided for update
     if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({ error: "No valid fields to update" });
+      return res
+        .status(400)
+        .json({ error: "Bad Request", message: "No valid fields to update" });
     }
 
-    const filterUpdate = await prisma.Filter.update({
+    // Perform filter update
+    const filterUpdate = await prisma.filter.update({
       where: { id },
       data: updateData,
     });
 
-    return res.json({
+    // Return success response
+    return res.status(200).json({
       message: "Filter has been updated",
       statusCode: 200,
       data: filterUpdate,
     });
   } catch (error) {
-    return res.status(400).json({
-      error: "An error has occurred",
-      message: error.message,
-    });
+    // Handle errors
+    return res
+      .status(400)
+      .json({ error: "An error has occurred", message: error.message });
   }
 };
 

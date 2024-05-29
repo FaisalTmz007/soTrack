@@ -1,21 +1,22 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const getAllCategory = async (req, res) => {
+const getAllCategories = async (req, res) => {
   try {
-    const category = await prisma.PublicReportCategory.findMany();
+    const categories = await prisma.PublicReportCategory.findMany();
 
     res.json({
-      message: "All categories",
+      message: "All categories retrieved successfully",
       statusCode: 200,
-      data: category,
+      data: categories,
     });
   } catch (error) {
-    res.status(400).json({
-      error: "An error has occured",
-      message: error.message,
+    console.error("Error fetching categories:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "An error occurred while retrieving categories",
     });
   }
 };
 
-module.exports = getAllCategory;
+module.exports = getAllCategories;
