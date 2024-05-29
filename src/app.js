@@ -211,6 +211,7 @@ passport.use(
         // console.log("🚀 ~ cihuy:", accessToken);
         return cb(null, user);
       } else if (user_id !== user.id) {
+        console.log("Adding new facebook user to DB..");
         const pageListsResponse = await axios.get(
           `https://graph.facebook.com/v19.0/${profile.id}/accounts`,
           {
@@ -314,7 +315,7 @@ passport.use(
         return cb(null, user);
       } else {
         console.log("Facebook User already exists in DB..");
-        return json({
+        res.json({
           message: "Facebook User already exists in DB..",
         });
       }
