@@ -25,7 +25,7 @@ const deleteFilter = async (req, res) => {
         id,
       },
       select: {
-        userId: true,
+        user_id: true,
       },
     });
 
@@ -38,7 +38,7 @@ const deleteFilter = async (req, res) => {
     }
 
     // Check if user is authorized to delete the filter
-    if (filter.userId !== decoded.id) {
+    if (filter.user_id !== decoded.id) {
       return res.status(403).json({
         error: "Forbidden",
         message: "You are not authorized to delete this filter",

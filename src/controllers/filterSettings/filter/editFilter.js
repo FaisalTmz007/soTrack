@@ -23,16 +23,14 @@ const editFilter = async (req, res) => {
     const filter = await prisma.filter.findFirst({
       where: {
         id,
-        userId: decoded.id,
       },
     });
 
     // Check if filter exists and user is authorized
-    if (!filter) {
-      return res.status(403).json({
-        error: "Access denied",
-        message: "Filter not found or unauthorized",
-      });
+    if (!filter || filter.user_id !== decoded.id) {
+      return res
+        .status(404)
+        .json({ error: "Not Found", message: "Filter not found" });
     }
 
     // Prepare update data
