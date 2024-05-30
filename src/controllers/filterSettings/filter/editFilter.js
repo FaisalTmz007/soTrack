@@ -6,21 +6,18 @@ const prisma = new PrismaClient();
 const editFilter = async (req, res) => {
   const { id } = req.params;
   const { parameter, is_active } = req.body;
-  const accessToken = req.headers["authorization"];
+  const refresh_token = req.cookies.refresh_token;
 
   try {
     // Check if access token is present
-    if (!accessToken) {
+    if (!refresh_token) {
       return res
         .status(401)
-        .json({ error: "Unauthorized", message: "Access token missing" });
+        .json({ error: "Unauthorized", message: "Refresh token missing" });
     }
 
-    // Verify access token
-    const decoded = jwt.verify(
-      accessToken.split(" ")[1],
-      process.env.ACCESS_TOKEN_SECRET
-    );
+    // Verify refresh token
+    const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
 
     // Find filter by ID and user ID
     const filter = await prisma.filter.findFirst({
