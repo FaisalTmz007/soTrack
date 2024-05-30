@@ -1,16 +1,17 @@
 const { appRouter } = require("../index");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const jwt = require("jsonwebtoken");
 const passport = require("passport");
 
 //middleware
-const isLoggedIn = (req, res, next) => {
-  if (req.cookies.facebook_access_token) {
-    next();
-  } else {
-    res.status(401).send("Not Logged In");
-  }
-};
+// const isLoggedIn = (req, res, next) => {
+//   if (req.cookies.facebook_access_token) {
+//     next();
+//   } else {
+//     res.status(401).send("Not Logged In");
+//   }
+// };
 
 appRouter.get("/auth/facebook", (req, res, next) => {
   const { id } = req.query;
@@ -66,27 +67,57 @@ appRouter.get(
   }
 );
 
-appRouter.get("/auth/facebook/success", isLoggedIn, async (req, res) => {
-  const userInfo = {
-    id: req.session.passport.user.id,
-  };
-  res.send(userInfo);
-});
+// appRouter.get("/auth/facebook/success", isLoggedIn, async (req, res) => {
+//   const userInfo = {
+//     id: req.session.passport.user.id,
+//   };
+//   res.send(userInfo);
+// });
 
 appRouter.get("/auth/facebook/error", (req, res) => {
-  res.send("User with this email is not registered in Socialens.");
+  res.json({
+    message: "Error logging in with Facebook",
+  });
 });
 
 appRouter.get("/auth/facebook/signout", async (req, res) => {
   try {
-    const user = req.user;
+    const refreshToken = req.cookies.refresh_token;
+
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    console.log("decoded", decoded);
 
     await prisma.User.update({
       where: {
-        id: user.id,
+        id: decoded.id,
       },
       data: {
         facebook_id: null,
+      },
+    });
+
+    await prisma.Filter.deleteMany({
+      where: {
+        user_id: decoded.id,
+        Platform: {
+          name: "Facebook",
+        },
+        Category: {
+          name: "Mention",
+        },
+      },
+    });
+
+    await prisma.Filter.deleteMany({
+      where: {
+        user_id: decoded.id,
+        Platform: {
+          name: "Instagram",
+        },
+        Category: {
+          name: "Mention",
+        },
       },
     });
 
