@@ -71,8 +71,6 @@ const sentimentAnalysis = async (req, res) => {
                   }
                 );
 
-                // console.log(sentiment.data.category);
-
                 n.sentiment = sentiment.data.category;
 
                 return n;

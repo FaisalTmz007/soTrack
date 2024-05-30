@@ -35,7 +35,7 @@ const generateToken = async (user) => {
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
-          expiresIn: "7d",
+          expiresIn: "30d",
         }
       );
 
@@ -86,7 +86,7 @@ const generateToken = async (user) => {
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
-          expiresIn: "7d",
+          expiresIn: "30d",
         }
       );
 
