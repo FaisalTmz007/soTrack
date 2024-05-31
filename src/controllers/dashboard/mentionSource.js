@@ -284,8 +284,12 @@ const mentionSource = async (req, res) => {
         );
       }
 
+      const mentionPostsInRange = mentionPosts.filter((post) => {
+        return post.timestamp >= since && post.timestamp <= until;
+      });
+
       // Mention source count
-      const mentionSourceCount = mentionPosts.reduce((acc, post) => {
+      const mentionSourceCount = mentionPostsInRange.reduce((acc, post) => {
         if (!acc[post.username]) {
           acc[post.username] = {
             id: post.filter_id,
@@ -300,8 +304,12 @@ const mentionSource = async (req, res) => {
       //   mentionSourceCount
       // );
 
+      const hashtagPostsInRange = hashtagPosts.filter((post) => {
+        return post.timestamp >= since && post.timestamp <= until;
+      });
+
       // Hashtag source count
-      const hashtagSourceCount = hashtagPosts.reduce((acc, post) => {
+      const hashtagSourceCount = hashtagPostsInRange.reduce((acc, post) => {
         if (!acc[post.hashtagName]) {
           acc[post.hashtagName] = {
             id: post.hashtagId,
