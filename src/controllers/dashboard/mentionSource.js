@@ -313,6 +313,7 @@ const mentionSource = async (req, res) => {
         if (!acc[post.hashtagName]) {
           acc[post.hashtagName] = {
             id: post.hashtagId,
+            instagram_id: mentionFilter[0].id,
             totalPosts: 0,
           };
         }
