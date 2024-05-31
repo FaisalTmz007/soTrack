@@ -184,17 +184,17 @@ const mentionDetails = async (req, res) => {
           });
         }
       } else if (source === "hashtag") {
-        const { hashtag_id, instagram_id } = req.query;
+        const { page_id, instagram_id } = req.query;
 
-        if (!hashtag_id || !instagram_id) {
+        if (!page_id || !instagram_id) {
           return res.status(400).json({
             error: "Bad Request",
-            message: "Please provide a valid hashtag_id and instagram_id",
+            message: "Please provide a valid page_id and instagram_id",
           });
         }
 
         const instagramHashtags = await axios.get(
-          `https://graph.facebook.com/v19.0/${hashtag_id}/recent_media`,
+          `https://graph.facebook.com/v19.0/${page_id}/recent_media`,
           {
             params: {
               fields: `id, caption, permalink, timestamp`,
