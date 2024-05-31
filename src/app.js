@@ -191,7 +191,7 @@ passport.use(
                   data: {
                     id: page.instagram_business_account.id,
                     parameter: username,
-                    platform_id: fbPlatform.id,
+                    platform_id: igPlatform.id,
                     category_id: category.id,
                     user_id: user_id,
                   },

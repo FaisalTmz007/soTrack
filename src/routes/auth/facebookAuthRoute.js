@@ -127,7 +127,8 @@ appRouter.get("/auth/facebook/signout", async (req, res) => {
     res
       .clearCookie("facebook_access_token")
       .clearCookie("connect.sid")
-      .send("Logged out successfully");
+      // .send("Logged out successfully");
+      .redirect(`${process.env.FRONTEND_URL}/dashboard`);
   } catch (err) {
     res.status(400).send({ message: err.message });
   }
