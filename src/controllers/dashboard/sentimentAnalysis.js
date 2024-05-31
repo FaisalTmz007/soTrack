@@ -85,6 +85,10 @@ const sentimentAnalysis = async (req, res) => {
       if (allNews.length === 0) {
         return res.status(404).json({
           message: "No news found",
+          data: {
+            positive: 0,
+            negative: 0,
+          },
         });
       }
 
@@ -201,6 +205,10 @@ const sentimentAnalysis = async (req, res) => {
       if (allPosts.length === 0) {
         return res.status(404).json({
           message: "No posts found",
+          data: {
+            positive: 0,
+            negative: 0,
+          },
         });
       }
 
@@ -357,6 +365,16 @@ const sentimentAnalysis = async (req, res) => {
             allPosts.push(...translatedPosts);
           })
         );
+      }
+
+      if (allPosts.length === 0) {
+        return res.status(404).json({
+          message: "No posts found",
+          data: {
+            positive: 0,
+            negative: 0,
+          },
+        });
       }
 
       // Calculate sentiment percentages
