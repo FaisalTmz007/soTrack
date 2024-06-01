@@ -1,5 +1,6 @@
 const axios = require("axios");
 const translate = require("translate-google");
+const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const convertToTimestamp = require("../../utils/convertToTimestamp");
@@ -7,6 +8,16 @@ const convertToTimestamp = require("../../utils/convertToTimestamp");
 const mentionDetails = async (req, res) => {
   try {
     const { platform, source, since, until, topic } = req.query;
+    const refreshToken = req.cookies.refresh_token;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Please login first",
+      });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
     const capitalizedTopic = topic.charAt(0).toUpperCase() + topic.slice(1);
 
@@ -199,8 +210,7 @@ const mentionDetails = async (req, res) => {
             params: {
               fields: `id, caption, permalink, timestamp`,
               user_id: instagram_id,
-              since: convertToTimestamp(since),
-              until: convertToTimestamp(until),
+              limit: 50,
               access_token: token,
             },
           }
@@ -209,7 +219,10 @@ const mentionDetails = async (req, res) => {
         const updatedHashtags = await Promise.all(
           instagramHashtags.data.data.map(async (tag) => {
             const caption = tag.caption ? tag.caption : "No caption";
-            const translatedcaption = await translate(caption, { to: "en" });
+            const translatedcaption = await translate(caption, {
+              from: "id",
+              to: "en",
+            });
 
             const predict = await axios.post(
               `${process.env.FLASK_URL}/predict`,
@@ -252,22 +265,42 @@ const mentionDetails = async (req, res) => {
     } else if (platform === "news") {
       // console.log("🚀 ~ mentionDetails ~ source:", source);
 
-      const whereClause = {
-        published_at: {
-          gte: new Date(since),
-          lte: new Date(until),
+      const filter = await prisma.Filter.findMany({
+        where: {
+          user_id: decoded.id,
+          Platform: {
+            name: "News",
+          },
+          Category: {
+            name: "Keyword",
+          },
         },
-      };
-
-      if (source) {
-        whereClause.source = source;
-      }
-
-      const news = await prisma.news.findMany({
-        where: whereClause,
       });
 
-      const results = news.map((post) => {
+      let allNews = [];
+
+      if (filter.length > 0) {
+        await Promise.all(
+          filter.map(async (item) => {
+            const news = await prisma.News.findMany({
+              where: {
+                title: {
+                  contains: item.parameter,
+                },
+                published_at: {
+                  gte: new Date(since),
+                  lte: new Date(until),
+                },
+                source: source,
+              },
+            });
+
+            allNews = allNews.concat(news);
+          })
+        );
+      }
+
+      const results = allNews.map((post) => {
         return {
           id: post.id,
           date: post.published_at,

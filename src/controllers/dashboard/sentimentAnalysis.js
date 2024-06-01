@@ -377,8 +377,13 @@ const sentimentAnalysis = async (req, res) => {
         });
       }
 
+      const allPostsInRange = allPosts.filter((post) => {
+        const timestamp = post.timestamp;
+        return timestamp >= fromUnix && timestamp <= toUnix;
+      });
+
       // Calculate sentiment percentages
-      const sentimentCounts = allPosts.reduce((acc, post) => {
+      const sentimentCounts = allPostsInRange.reduce((acc, post) => {
         acc[post.sentiment] = (acc[post.sentiment] || 0) + 1;
         return acc;
       }, {});

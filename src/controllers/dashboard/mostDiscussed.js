@@ -126,6 +126,7 @@ const mostDiscussed = async (req, res) => {
                 params: {
                   user_id: mentionFilter[0].id,
                   fields: "timestamp",
+                  limit: 50,
                   access_token: facebook_access_token,
                 },
               }
@@ -159,7 +160,12 @@ const mostDiscussed = async (req, res) => {
         );
       }
 
-      const countsByType = allPosts.reduce((acc, post) => {
+      const allPostsInRange = allPosts.filter((post) => {
+        const postTimestamp = new Date(post.timestamp * 1000).toISOString();
+        return postTimestamp >= since && postTimestamp <= until;
+      });
+
+      const countsByType = allPostsInRange.reduce((acc, post) => {
         if (!acc[post.crime_type]) {
           acc[post.crime_type] = 0;
         }
