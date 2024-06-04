@@ -49,7 +49,7 @@ const broadcastEmail = async (req, res) => {
     }
 
     // Save email broadcast to the database
-    await prisma.emailBroadcast.create({
+    const storeData = await prisma.emailBroadcast.create({
       data: {
         receipient: email,
         subject,
@@ -65,6 +65,7 @@ const broadcastEmail = async (req, res) => {
       message: "Congratulations, your email broadcast was successfully sent.",
       statusCode: 200,
       data: {
+        id: storeData.id,
         to: email,
         subject,
         message: fullMessage,
