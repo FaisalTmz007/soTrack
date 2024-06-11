@@ -63,7 +63,7 @@ const refreshOtp = async (req, res) => {
       data: {
         id: user.id,
         email: user.email,
-        otp_code: otp,
+        // otp_code: otp,
         otp_expired,
       },
     });
