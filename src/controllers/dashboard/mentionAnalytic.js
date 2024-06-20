@@ -74,7 +74,7 @@ const mentionAnalytic = async (req, res) => {
               const news = await prisma.News.findMany({
                 where: {
                   title: {
-                    contains: mf.keyword,
+                    contains: mf.parameter,
                   },
                   published_at: {
                     gte: since,
