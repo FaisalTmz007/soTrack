@@ -101,6 +101,7 @@ const criminalReport = async (req, res) => {
         message: "Data has been fetched",
         statusCode: 200,
         data: countsByYear,
+        post: allNews,
       });
     } else if (platform === "facebook") {
       const facebook_access_token = req.cookies.facebook_access_token;
@@ -181,6 +182,7 @@ const criminalReport = async (req, res) => {
         message: "Data has been fetched",
         statusCode: 200,
         data: countsByYear,
+        post: allPosts,
       });
     } else if (platform === "instagram") {
       const facebook_access_token = req.cookies.facebook_access_token;
@@ -280,7 +282,14 @@ const criminalReport = async (req, res) => {
         );
       }
 
-      const countsByYear = allPosts.reduce((acc, post) => {
+      allPostsInRange = allPosts.filter((post) => {
+        const postTimestamp = new Date(post.timestamp);
+        const sinceDate = new Date(since);
+        const untilDate = new Date(until);
+        return postTimestamp >= sinceDate && postTimestamp <= untilDate;
+      });
+
+      const countsByYear = allPostsInRange.reduce((acc, post) => {
         const date = new Date(post.timestamp);
         const year = date.getFullYear();
         const month = date.getMonth() + 1;
@@ -296,6 +305,7 @@ const criminalReport = async (req, res) => {
         message: "Data has been fetched",
         statusCode: 200,
         data: countsByYear,
+        post: allPostsInRange,
       });
     }
   } catch (error) {

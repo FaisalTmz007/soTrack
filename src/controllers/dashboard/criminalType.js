@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const translate = require("translate-google");
 const axios = require("axios");
 const convertToTimestamp = require("../../utils/convertToTimestamp");
+const { post } = require("../../app");
 
 const criminalType = async (req, res) => {
   try {
@@ -57,16 +58,12 @@ const criminalType = async (req, res) => {
 
             if (news.length === 0) return [];
 
-            console.log("panjang news", news.length);
-
             news.forEach((n) => {
               allNews.push(n);
             });
           })
         );
       }
-
-      console.log("panjang allNews", allNews.length);
 
       const countsByType = allNews.reduce((acc, post) => {
         if (!acc[post.crime_type]) {
@@ -80,6 +77,7 @@ const criminalType = async (req, res) => {
         message: "Success",
         statusCode: 200,
         data: countsByType,
+        post: allNews,
       });
     } else if (platform === "facebook") {
       const facebook_access_token = req.cookies.facebook_access_token;
@@ -179,6 +177,7 @@ const criminalType = async (req, res) => {
         message: "Success",
         statusCode: 200,
         data: countsByType,
+        post: allMentions,
       });
     } else if (platform === "instagram") {
       const facebook_access_token = req.cookies.facebook_access_token;
@@ -312,7 +311,14 @@ const criminalType = async (req, res) => {
         );
       }
 
-      const countsByType = allPosts.reduce((acc, post) => {
+      const allPostsInRange = allPosts.filter((post) => {
+        const postTimestamp = new Date(post.timestamp);
+        const sinceDate = new Date(since);
+        const untilDate = new Date(until);
+        return postTimestamp >= sinceDate && postTimestamp <= untilDate;
+      });
+
+      const countsByType = allPostsInRange.reduce((acc, post) => {
         if (!acc[post.crime_type]) {
           acc[post.crime_type] = 0;
         }
@@ -324,6 +330,7 @@ const criminalType = async (req, res) => {
         message: "Success",
         statusCode: 200,
         data: countsByType,
+        post: allPostsInRange,
       });
     }
   } catch (error) {

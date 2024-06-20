@@ -159,11 +159,15 @@ const mostDiscussed = async (req, res) => {
           })
         );
       }
-
+      // console.log(allPosts.length);
       const allPostsInRange = allPosts.filter((post) => {
-        const postTimestamp = new Date(post.timestamp * 1000).toISOString();
-        return postTimestamp >= since && postTimestamp <= until;
+        const postTimestamp = new Date(post.timestamp);
+        const sinceDate = new Date(since);
+        const untilDate = new Date(until);
+        return postTimestamp >= sinceDate && postTimestamp <= untilDate;
       });
+
+      // console.log(allPostsInRange.length);
 
       const countsByType = allPostsInRange.reduce((acc, post) => {
         if (!acc[post.crime_type]) {
@@ -177,6 +181,7 @@ const mostDiscussed = async (req, res) => {
         message: "Success",
         statusCode: 200,
         data: countsByType,
+        post: allPostsInRange,
       });
     } else if (platform.toLowerCase() === "facebook") {
       const facebook_access_token = req.cookies.facebook_access_token;
@@ -277,6 +282,7 @@ const mostDiscussed = async (req, res) => {
         message: "Success",
         statusCode: 200,
         data: countsByType,
+        post: allMentions,
       });
     } else if (platform.toLowerCase() === "news") {
       const filter = await prisma.Filter.findMany({
@@ -330,6 +336,7 @@ const mostDiscussed = async (req, res) => {
         message: "Success",
         statusCode: 200,
         data: countsByType,
+        post: allNews,
       });
     } else {
       return res.status(400).json({

@@ -76,7 +76,7 @@ appRouter.get(
 
 appRouter.get("/auth/facebook/error", (req, res) => {
   res.json({
-    message: "Error logging in with Facebook",
+    message: "Facebook account is already connected to another account.",
   });
 });
 

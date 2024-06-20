@@ -82,6 +82,7 @@ const mentionSource = async (req, res) => {
         data: {
           keyword: sourceCount,
         },
+        post: allNews,
       });
     } else if (platform === "facebook") {
       const facebook_access_token = req.cookies.facebook_access_token;
@@ -172,6 +173,7 @@ const mentionSource = async (req, res) => {
         data: {
           mention: sourceCount,
         },
+        post: allMentions,
       });
     } else if (platform === "instagram") {
       const facebook_access_token = req.cookies.facebook_access_token;
@@ -331,6 +333,10 @@ const mentionSource = async (req, res) => {
         data: {
           mention: mentionSourceCount,
           hashtag: hashtagSourceCount,
+        },
+        post: {
+          mention: mentionPostsInRange,
+          hashtag: hashtagPostsInRange,
         },
       });
     }

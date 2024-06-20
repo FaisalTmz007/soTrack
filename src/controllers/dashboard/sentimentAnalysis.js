@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const translate = require("translate-google");
+const { post } = require("../../app");
 
 const sentimentAnalysis = async (req, res) => {
   try {
@@ -89,6 +90,7 @@ const sentimentAnalysis = async (req, res) => {
             positive: 0,
             negative: 0,
           },
+          post: allNews,
         });
       }
 
@@ -110,6 +112,7 @@ const sentimentAnalysis = async (req, res) => {
       res.json({
         message: "All news",
         data: sentimentPercentages,
+        post: allNews,
       });
     } else if (platform === "facebook") {
       const facebook_access_token = req.cookies.facebook_access_token;
@@ -209,6 +212,7 @@ const sentimentAnalysis = async (req, res) => {
             positive: 0,
             negative: 0,
           },
+          post: allPosts,
         });
       }
 
@@ -230,6 +234,7 @@ const sentimentAnalysis = async (req, res) => {
       res.json({
         message: "All posts",
         data: sentimentPercentages,
+        post: allPosts,
       });
     } else if (platform === "instagram") {
       const facebook_access_token = req.cookies.facebook_access_token;
@@ -374,6 +379,7 @@ const sentimentAnalysis = async (req, res) => {
             positive: 0,
             negative: 0,
           },
+          post: allPosts,
         });
       }
 
@@ -400,6 +406,7 @@ const sentimentAnalysis = async (req, res) => {
       res.json({
         message: "All posts",
         data: sentimentPercentages,
+        post: allPostsInRange,
       });
     }
   } catch (error) {

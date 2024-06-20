@@ -150,27 +150,36 @@ const mentionAnalytic = async (req, res) => {
                 ? `https://graph.facebook.com/v19.0/${pf.id}/tagged`
                 : `https://graph.facebook.com/v19.0/${pf.id}/tags`;
 
-            const page_info = await axios.get(
-              `https://graph.facebook.com/v19.0/${pf.id}`,
-              {
-                params: {
-                  fields: "access_token,instagram_business_account",
-                  access_token: facebookAccessToken,
-                },
-              }
-            );
+            let page_access_token = null;
+
+            if (platform === "facebook") {
+              const page_info = await axios.get(
+                `https://graph.facebook.com/v19.0/${pf.id}`,
+                {
+                  params: {
+                    fields: "access_token,instagram_business_account",
+                    access_token: facebookAccessToken,
+                  },
+                }
+              );
+              page_access_token = page_info.data.access_token;
+            }
 
             const response = await axios.get(endpoint, {
               params: {
                 access_token:
                   platform === "facebook"
-                    ? page_info.data.access_token
+                    ? page_access_token
                     : facebookAccessToken,
-                fields: platform === "facebook" ? "created_time" : "timestamp",
+                fields:
+                  platform === "facebook"
+                    ? "created_time,message"
+                    : "timestamp,caption",
                 since: sinceUnix,
                 until: untilUnix,
               },
             });
+
             return response.data.data;
           } catch (error) {
             return [];
@@ -180,7 +189,7 @@ const mentionAnalytic = async (req, res) => {
 
       // Flatten both arrays
       let flattenedMentionData = mentionData.flat();
-
+      console.log(flattenedMentionData);
       if (platform === "instagram") {
         const hashtagFilter = await prisma.Filter.findMany({
           where: {
@@ -215,7 +224,7 @@ const mentionAnalytic = async (req, res) => {
                   {
                     params: {
                       user_id: filter[0].id,
-                      fields: "timestamp",
+                      fields: "timestamp,caption",
                       access_token: facebookAccessToken,
                     },
                   }
@@ -256,6 +265,7 @@ const mentionAnalytic = async (req, res) => {
         message: "Data has been fetched",
         statusCode: 200,
         data: countsByYear,
+        post: flattenedMentionData,
       });
     }
   } catch (error) {
