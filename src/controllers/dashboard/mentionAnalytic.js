@@ -245,6 +245,12 @@ const mentionAnalytic = async (req, res) => {
       }
 
       // console.log(flattenedMentionData);
+      if (platform === "instagram") {
+        flattenedMentionData = flattenedMentionData.filter((post) => {
+          const date = new Date(post.timestamp);
+          return date >= since && date <= until;
+        });
+      }
 
       const countsByYear = flattenedMentionData.reduce((acc, post) => {
         const date = new Date(
