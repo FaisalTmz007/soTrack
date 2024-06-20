@@ -313,8 +313,8 @@ const criminalType = async (req, res) => {
 
       const allPostsInRange = allPosts.filter((post) => {
         const postTimestamp = new Date(post.timestamp);
-        const sinceDate = new Date(since);
-        const untilDate = new Date(until);
+        const sinceDate = new Date(from);
+        const untilDate = new Date(to);
         return postTimestamp >= sinceDate && postTimestamp <= untilDate;
       });
 
