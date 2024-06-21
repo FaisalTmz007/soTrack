@@ -126,7 +126,6 @@ const mostDiscussed = async (req, res) => {
                 params: {
                   user_id: mentionFilter[0].id,
                   fields: "timestamp",
-                  limit: 50,
                   access_token: facebook_access_token,
                 },
               }

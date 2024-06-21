@@ -269,11 +269,12 @@ const criminalReport = async (req, res) => {
                 params: {
                   user_id: mentionFilter[0].id,
                   fields: "timestamp",
-                  limit: 50,
                   access_token: facebook_access_token,
                 },
               }
             );
+
+            if (posts.data.data.length === 0) return [];
 
             posts.data.data.forEach((p) => {
               allPosts.push(p);
@@ -282,7 +283,7 @@ const criminalReport = async (req, res) => {
         );
       }
 
-      allPostsInRange = allPosts.filter((post) => {
+      const allPostsInRange = allPosts.filter((post) => {
         const postTimestamp = new Date(post.timestamp);
         const sinceDate = new Date(since);
         const untilDate = new Date(until);

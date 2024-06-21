@@ -210,7 +210,6 @@ const mentionDetails = async (req, res) => {
             params: {
               fields: `id, caption, permalink, timestamp`,
               user_id: instagram_id,
-              limit: 50,
               access_token: token,
             },
           }

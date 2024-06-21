@@ -211,7 +211,7 @@ const criminalType = async (req, res) => {
               `https://graph.facebook.com/v19.0/${f.id}/tags`,
               {
                 params: {
-                  fields: "caption, timestamp",
+                  fields: "timestamp",
                   access_token: facebook_access_token,
                 },
               }

@@ -189,60 +189,60 @@ const mentionAnalytic = async (req, res) => {
 
       // Flatten both arrays
       let flattenedMentionData = mentionData.flat();
-      console.log(flattenedMentionData);
-      if (platform === "instagram") {
-        const hashtagFilter = await prisma.Filter.findMany({
-          where: {
-            user_id: decoded.id,
-            is_active: true,
-            Platform: {
-              name: "Instagram",
-            },
-            Category: {
-              name: "Hashtag",
-            },
-          },
-        });
+      // console.log(flattenedMentionData);
+      // if (platform === "instagram") {
+      //   const hashtagFilter = await prisma.Filter.findMany({
+      //     where: {
+      //       user_id: decoded.id,
+      //       is_active: true,
+      //       Platform: {
+      //         name: "Instagram",
+      //       },
+      //       Category: {
+      //         name: "Hashtag",
+      //       },
+      //     },
+      //   });
 
-        if (hashtagFilter.length > 0) {
-          const hashtagData = await Promise.all(
-            hashtagFilter.map(async (hf) => {
-              try {
-                const hashtagId = await axios.get(
-                  `https://graph.facebook.com/v19.0/ig_hashtag_search`,
-                  {
-                    params: {
-                      user_id: filter[0].id,
-                      q: hf.parameter,
-                      access_token: facebookAccessToken,
-                    },
-                  }
-                );
+      //   if (hashtagFilter.length > 0) {
+      //     const hashtagData = await Promise.all(
+      //       hashtagFilter.map(async (hf) => {
+      //         try {
+      //           const hashtagId = await axios.get(
+      //             `https://graph.facebook.com/v19.0/ig_hashtag_search`,
+      //             {
+      //               params: {
+      //                 user_id: filter[0].id,
+      //                 q: hf.parameter,
+      //                 access_token: facebookAccessToken,
+      //               },
+      //             }
+      //           );
 
-                const response = await axios.get(
-                  `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/recent_media`,
-                  {
-                    params: {
-                      user_id: filter[0].id,
-                      fields: "timestamp,caption",
-                      access_token: facebookAccessToken,
-                    },
-                  }
-                );
+      //           const response = await axios.get(
+      //             `https://graph.facebook.com/v19.0/${hashtagId.data.data[0].id}/recent_media`,
+      //             {
+      //               params: {
+      //                 user_id: filter[0].id,
+      //                 fields: "timestamp,caption",
+      //                 access_token: facebookAccessToken,
+      //               },
+      //             }
+      //           );
 
-                return response.data.data;
-              } catch (error) {
-                console.log(error.message);
-                return [];
-              }
-            })
-          );
-          let flattenedHashtagData = hashtagData.flat();
+      //           return response.data.data;
+      //         } catch (error) {
+      //           console.log(error.message);
+      //           return [];
+      //         }
+      //       })
+      //     );
+      //     let flattenedHashtagData = hashtagData.flat();
 
-          // Add new data to the flattened array
-          flattenedMentionData.push(...flattenedHashtagData);
-        }
-      }
+      //     // Add new data to the flattened array
+      //     flattenedMentionData.push(...flattenedHashtagData);
+      //   }
+      // }
 
       // console.log(flattenedMentionData);
       if (platform === "instagram") {
