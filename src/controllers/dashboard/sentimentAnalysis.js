@@ -246,10 +246,6 @@ const sentimentAnalysis = async (req, res) => {
         });
       }
 
-      // convert from adn to into UNIX
-      const fromUnix = Math.floor(new Date(from).getTime() / 1000);
-      const toUnix = Math.floor(new Date(to).getTime() / 1000);
-
       let allPosts = [];
 
       const mentionFilter = await prisma.Filter.findMany({
@@ -383,9 +379,11 @@ const sentimentAnalysis = async (req, res) => {
         });
       }
 
+      console.log(allPosts);
+
       const allPostsInRange = allPosts.filter((post) => {
         const timestamp = post.timestamp;
-        return timestamp >= fromUnix && timestamp <= toUnix;
+        return timestamp >= from && timestamp <= to;
       });
 
       // Calculate sentiment percentages
