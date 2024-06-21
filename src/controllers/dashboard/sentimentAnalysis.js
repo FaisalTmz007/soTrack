@@ -379,20 +379,37 @@ const sentimentAnalysis = async (req, res) => {
         });
       }
 
-      console.log(allPosts);
+      // console.log(allPosts);
 
       const allPostsInRange = allPosts.filter((post) => {
         const timestamp = post.timestamp;
         return timestamp >= from && timestamp <= to;
       });
 
-      // Calculate sentiment percentages
+      // // Calculate sentiment percentages
+      // const sentimentCounts = allPostsInRange.reduce((acc, post) => {
+      //   // positive
+      //   acc[post.sentiment] = (acc[post.sentiment] || 0) + 1;
+      //   return acc;
+      // }, {});
+
+      // const totalPosts = allPosts.length;
+      // const sentimentPercentages = Object.entries(sentimentCounts).reduce(
+      //   (acc, [sentiment, count]) => {
+      //     acc[sentiment] = ((count / totalPosts) * 100).toFixed(2) + "%";
+      //     return acc;
+      //   },
+      //   {}
+      // );
+
+      // count all positive and negative sentiment
       const sentimentCounts = allPostsInRange.reduce((acc, post) => {
         acc[post.sentiment] = (acc[post.sentiment] || 0) + 1;
         return acc;
       }, {});
 
-      const totalPosts = allPosts.length;
+      const totalPosts = allPostsInRange.length;
+
       const sentimentPercentages = Object.entries(sentimentCounts).reduce(
         (acc, [sentiment, count]) => {
           acc[sentiment] = ((count / totalPosts) * 100).toFixed(2) + "%";
