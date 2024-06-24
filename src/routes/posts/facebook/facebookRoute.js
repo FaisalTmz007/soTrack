@@ -6,4 +6,6 @@ const {
 
 appRouter.get("/facebook/page", FacebookController.controllers.facebookGetPage);
 
+appRouter.get("/facebook/user", FacebookController.controllers.facebookGetUser);
+
 module.exports = appRouter;
