@@ -272,7 +272,9 @@ const getTimeline = async (req, res) => {
 
       // console.log("🚀 ~ getTimeline ~ keywords:", keywords);
 
-      const allNews = await Promise.all(
+      let allNews = [];
+
+      await Promise.all(
         keywords.map(async (keyword) => {
           const news = await prisma.news.findMany({
             where: {
@@ -294,7 +296,8 @@ const getTimeline = async (req, res) => {
             })
           );
 
-          return updateNews;
+          allNews.push(...updateNews);
+          // return updateNews;
         })
       );
       res.json({
