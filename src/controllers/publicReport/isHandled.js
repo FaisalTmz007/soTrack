@@ -16,12 +16,6 @@ const isHandled = async (req, res) => {
 
     const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: decoded.id,
-      },
-    });
-
     const publicReport = await prisma.publicReport.findUnique({
       where: {
         id: public_report_id,
@@ -35,7 +29,7 @@ const isHandled = async (req, res) => {
       });
     }
 
-    if (user.id !== publicReport.user_id) {
+    if (decoded.id !== publicReport.user_id) {
       return res.status(401).json({
         error: "Unauthorized",
         message: "You are not authorized to handle this report",

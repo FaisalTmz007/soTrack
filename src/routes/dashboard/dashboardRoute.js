@@ -1,6 +1,6 @@
 const { appRouter } = require("../index");
 const authenticate = require("../../middlewares/auth/authenticate");
-const isLoggedIn = require("../../middlewares/auth/facebookAuth");
+// const isLoggedIn = require("../../middlewares/auth/facebookAuth");
 const { DashboardController } = require("../../controllers/dashboard/index");
 
 appRouter.get(

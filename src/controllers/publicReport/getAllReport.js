@@ -19,14 +19,7 @@ const getAllReports = async (req, res) => {
       where: { id: decoded.id },
     });
 
-    const {
-      q,
-      since,
-      until,
-      is_handled = false,
-      page = 1,
-      limit = 10,
-    } = req.query;
+    const { q, since, until, page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
     const where = {
       user_id: user.id,
