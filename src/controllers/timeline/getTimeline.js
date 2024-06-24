@@ -258,56 +258,49 @@ const getTimeline = async (req, res) => {
         data: updatedPost,
       });
     } else if (platform.toLowerCase() === "news") {
-      const { keyword } = req.query ? req.query : "";
+      const { keyword } = req.query;
 
       if (!keyword) {
-        // order the news by date
-        const news = await prisma.news.findMany({});
-
-        const updateNews = await Promise.all(
-          news.map(async (post) => {
-            return {
-              id: post.id,
-              source: post.source,
-              timestamp: post.createdAt,
-              caption: post.title,
-              permalink: post.url,
-            };
-          })
-        );
-
-        return res.json({
-          message: "Success",
-          statusCode: 200,
-          data: updateNews,
+        return res.status(400).json({
+          error: "Bad Request",
+          message: "Please provide keyword query parameter",
         });
       }
 
-      const news = await prisma.news.findMany({
-        where: {
-          title: {
-            contains: keyword,
-          },
-        },
-      });
+      // split query by comma
+      const keywords = keyword.split(",");
 
-      const updateNews = await Promise.all(
-        news.map(async (post) => {
-          return {
-            id: post.id,
-            source: post.source,
-            timestamp: post.createdAt,
-            caption: post.title,
-            permalink: post.url,
-          };
+      // console.log("🚀 ~ getTimeline ~ keywords:", keywords);
+
+      await Promise.all(
+        keywords.map(async (keyword) => {
+          const news = await prisma.news.findMany({
+            where: {
+              title: {
+                contains: keyword,
+              },
+            },
+          });
+
+          const updateNews = await Promise.all(
+            news.map(async (post) => {
+              return {
+                id: post.id,
+                source: post.source,
+                timestamp: post.createdAt,
+                caption: post.title,
+                permalink: post.url,
+              };
+            })
+          );
+
+          return res.json({
+            message: "Success",
+            statusCode: 200,
+            data: updateNews,
+          });
         })
       );
-
-      return res.json({
-        message: "Success",
-        statusCode: 200,
-        data: updateNews,
-      });
     }
 
     // res.json({ message: hashtags });
